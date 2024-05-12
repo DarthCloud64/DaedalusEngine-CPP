@@ -65,10 +65,15 @@ namespace DaedalusEngine {
         IShaderResourceBinding* _shaderResourceBinding = nullptr;
         IShader* _vertexShader = nullptr;
         IShader* _fragmentShader = nullptr;
-        IBuffer* _triangleBuffer = nullptr;
+        IBuffer* _cubeBuffer = nullptr;
+        IBuffer* _cubeIndexBuffer = nullptr;
 
         std::tuple<ITextureView*, ITextureView*> SetRenderTargets();
         void ClearViews(std::tuple<ITextureView*, ITextureView*> renderTargets);
+        void CreateVertexShader(std::string fileName, std::string entryPoint);
+        void CreateFragmentShader(std::string fileName, std::string entryPoint);
+        IBuffer* CreateVertexBuffer(std::string name, std::vector<float>& data);
+        IBuffer* CreateIndexBuffer(std::string name, std::vector<int>& data);
     public:
         explicit RenderingManager(NativeWindowInformation* nativeWindowInformation);
         ~RenderingManager();

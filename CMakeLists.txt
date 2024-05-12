@@ -21,6 +21,8 @@ add_executable(DaedalusEngine main.cpp
         Graphics/RenderingManager.h
         Resource/ResourceLoader.cpp
         Resource/ResourceLoader.h
-        Application/ApplicationState.h)
+        Application/ApplicationState.h
+        Utilities/Utilities.cpp
+        Utilities/Utilities.h)
 
 target_link_libraries(DaedalusEngine assimp-vc143-mtd glfw3)

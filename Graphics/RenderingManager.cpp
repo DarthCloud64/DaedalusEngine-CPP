@@ -2,38 +2,23 @@
 // Created by neoro on 05/05/2024.
 //
 
-#include <fstream>
-#include <sstream>
+#include <vector>
 #include "RenderingManager.h"
+#include "../Utilities/Utilities.h"
 
 namespace DaedalusEngine {
-    // TODO: Remove this. This is just test data before model loading is introduced
-    float vertices[] = {
+    // TODO: Remove these test vertices and indices. This is just test data before model loading is introduced
+    std::vector<float> vertices = {
+        0.5f, 0.5f, 0.0f,
+        -0.5, 0.5f, 0.0f,
         -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f
     };
 
-    std::string read_shader_file (const char *shader_file)
-    {
-        std::ifstream file (shader_file);
-        if (!file) return std::string ();
-
-        file.ignore(std::numeric_limits<std::streamsize>::max());
-        auto size = file.gcount();
-
-        if (size > 0x10000) // 64KiB sanity check for shaders:
-            return std::string ();
-
-        file.clear();
-        file.seekg(0, std::ios_base::beg);
-
-        std::stringstream sstr;
-        sstr << file.rdbuf();
-        file.close();
-
-        return sstr.str();
-    }
+    std::vector<int> indices = {
+            1, 2,3,
+            0, 1, 3
+    };
 
     RenderingManager::RenderingManager(NativeWindowInformation* nativeWindowInformation) {
         InitializeEngine(nativeWindowInformation);
@@ -73,38 +58,14 @@ namespace DaedalusEngine {
         pipelineStateCreateInfo.GraphicsPipeline.RasterizerDesc.CullMode = CULL_MODE_FRONT;
         pipelineStateCreateInfo.GraphicsPipeline.DepthStencilDesc.DepthEnable = true;
 
-        ShaderCreateInfo shaderCreateInfo;
-        shaderCreateInfo.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
-        shaderCreateInfo.Desc.UseCombinedTextureSamplers = true;
-
-        std::string vertexContents = read_shader_file("vertex.shader");
-
-        shaderCreateInfo.Desc.ShaderType = SHADER_TYPE_VERTEX;
-        shaderCreateInfo.EntryPoint = "main";
-        shaderCreateInfo.Desc.Name = "VertexShader";
-        shaderCreateInfo.Source = vertexContents.c_str();
-        _renderDevice->CreateShader(shaderCreateInfo, &_vertexShader);
-
-        BufferDesc bufferDesc;
-        bufferDesc.Name = "TriangleData";
-        bufferDesc.Size = sizeof(vertices);
-        bufferDesc.Usage = USAGE_IMMUTABLE;
-        bufferDesc.BindFlags = BIND_VERTEX_BUFFER;
-        BufferData bufferData;
-        bufferData.pData = vertices;
-        bufferData.DataSize = sizeof(vertices);
-        _renderDevice->CreateBuffer(bufferDesc, &bufferData, &_triangleBuffer);
-
-        std::string fragmentContents = read_shader_file("fragment.shader");
-
-        shaderCreateInfo.Desc.ShaderType = SHADER_TYPE_PIXEL;
-        shaderCreateInfo.EntryPoint = "main";
-        shaderCreateInfo.Desc.Name = "FragmentShader";
-        shaderCreateInfo.Source = fragmentContents.c_str();
-        _renderDevice->CreateShader(shaderCreateInfo, &_fragmentShader);
+        CreateVertexShader("vertex.shader", "main");
+        CreateFragmentShader("fragment.shader", "main");
+        _cubeBuffer = CreateVertexBuffer("CubeData", vertices);
+        _cubeIndexBuffer = CreateIndexBuffer("CubeIndexData", indices);
 
         LayoutElement layoutElements[] = {
-                LayoutElement{0, 0, 3, VT_FLOAT32, False}
+                LayoutElement{0, 0, 3, VT_FLOAT32, False},
+                //LayoutElement {1, 0, 4, VT_FLOAT32, False}
         };
 
         pipelineStateCreateInfo.GraphicsPipeline.InputLayout.LayoutElements = layoutElements;
@@ -117,19 +78,86 @@ namespace DaedalusEngine {
         _pipelineState->CreateShaderResourceBinding(&_shaderResourceBinding, true);
     }
 
+    void RenderingManager::CreateVertexShader(std::string fileName, std::string entryPoint) {
+        ShaderCreateInfo shaderCreateInfo;
+        shaderCreateInfo.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
+        shaderCreateInfo.Desc.UseCombinedTextureSamplers = true;
+
+        std::string vertexContents = read_shader_file(fileName.c_str());
+
+        shaderCreateInfo.Desc.ShaderType = SHADER_TYPE_VERTEX;
+        shaderCreateInfo.EntryPoint = entryPoint.c_str();
+        shaderCreateInfo.Desc.Name = "VertexShader";
+        shaderCreateInfo.Source = vertexContents.c_str();
+        _renderDevice->CreateShader(shaderCreateInfo, &_vertexShader);
+    }
+
+    void RenderingManager::CreateFragmentShader(std::string fileName, std::string entryPoint) {
+        ShaderCreateInfo shaderCreateInfo;
+        shaderCreateInfo.SourceLanguage = SHADER_SOURCE_LANGUAGE_HLSL;
+        shaderCreateInfo.Desc.UseCombinedTextureSamplers = true;
+
+        std::string fragmentContents = read_shader_file(fileName.c_str());
+
+        shaderCreateInfo.Desc.ShaderType = SHADER_TYPE_PIXEL;
+        shaderCreateInfo.EntryPoint = entryPoint.c_str();
+        shaderCreateInfo.Desc.Name = "FragmentShader";
+        shaderCreateInfo.Source = fragmentContents.c_str();
+        _renderDevice->CreateShader(shaderCreateInfo, &_fragmentShader);
+    }
+
+    IBuffer *RenderingManager::CreateVertexBuffer(std::string name, std::vector<float>& data) {
+        IBuffer* vertexBuffer = nullptr;
+
+        size_t sizeOfData = data.size() * sizeof(data[0]);
+
+        BufferDesc vertexBufferDesc;
+        vertexBufferDesc.Name = name.c_str();
+        vertexBufferDesc.Size = sizeOfData;
+        vertexBufferDesc.Usage = USAGE_IMMUTABLE;
+        vertexBufferDesc.BindFlags = BIND_VERTEX_BUFFER;
+        BufferData vertexBufferData;
+        vertexBufferData.pData = data.data();
+        vertexBufferData.DataSize = sizeOfData;
+        _renderDevice->CreateBuffer(vertexBufferDesc, &vertexBufferData, &vertexBuffer);
+
+        return vertexBuffer;
+    }
+
+    IBuffer *RenderingManager::CreateIndexBuffer(std::string name, std::vector<int>& data) {
+        IBuffer* indexBuffer = nullptr;
+
+        size_t sizeOfData = data.size() * sizeof(data[0]);
+
+        BufferDesc indexBufferDesc;
+        indexBufferDesc.Name = name.c_str();
+        indexBufferDesc.Usage = USAGE_IMMUTABLE;
+        indexBufferDesc.BindFlags = BIND_INDEX_BUFFER;
+        indexBufferDesc.Size = sizeOfData;
+        BufferData indexBufferData;
+        indexBufferData.pData = data.data();
+        indexBufferData.DataSize = sizeOfData;
+        _renderDevice->CreateBuffer(indexBufferDesc, &indexBufferData, &indexBuffer);
+
+        return indexBuffer;
+    }
+
     void RenderingManager::Render() {
         std::tuple<ITextureView*, ITextureView*> renderTargets = SetRenderTargets();
         ClearViews(renderTargets);
 
         const Uint64 offset = 0;
-        IBuffer* buffers[] = {_triangleBuffer};
+        IBuffer* buffers[] = {_cubeBuffer};
         _deviceContext->SetVertexBuffers(0, 1, buffers, &offset, RESOURCE_STATE_TRANSITION_MODE_TRANSITION, SET_VERTEX_BUFFERS_FLAG_RESET);
+        _deviceContext->SetIndexBuffer(_cubeIndexBuffer, 0, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
         _deviceContext->SetPipelineState(_pipelineState);
         _deviceContext->CommitShaderResources(_shaderResourceBinding, RESOURCE_STATE_TRANSITION_MODE_TRANSITION);
 
-        DrawAttribs drawAttribs;
-        drawAttribs.NumVertices = 3;
-        _deviceContext->Draw(drawAttribs);
+        DrawIndexedAttribs drawIndexedAttribs;
+        drawIndexedAttribs.IndexType = VT_UINT32;
+        drawIndexedAttribs.NumIndices = 6;
+        drawIndexedAttribs.Flags = DRAW_FLAG_VERIFY_ALL;
+        _deviceContext->DrawIndexed(drawIndexedAttribs);
     }
 
     void RenderingManager::Present() {
