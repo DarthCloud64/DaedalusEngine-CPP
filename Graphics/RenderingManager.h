@@ -57,9 +57,15 @@ namespace DaedalusEngine {
 
     class RenderingManager {
     private:
-        IRenderDevice* _renderDevice;
-        IDeviceContext* _deviceContext;
-        ISwapChain* _swapChain;
+        IEngineFactoryVk* _engineFactoryVk = nullptr;
+        IRenderDevice* _renderDevice = nullptr;
+        IDeviceContext* _deviceContext = nullptr;
+        ISwapChain* _swapChain = nullptr;
+        IPipelineState* _pipelineState = nullptr;
+        IShaderResourceBinding* _shaderResourceBinding = nullptr;
+        IShader* _vertexShader = nullptr;
+        IShader* _fragmentShader = nullptr;
+        IBuffer* _triangleBuffer = nullptr;
 
         std::tuple<ITextureView*, ITextureView*> SetRenderTargets();
         void ClearViews(std::tuple<ITextureView*, ITextureView*> renderTargets);
