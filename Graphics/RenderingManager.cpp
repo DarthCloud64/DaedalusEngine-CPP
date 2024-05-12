@@ -5,14 +5,15 @@
 #include <vector>
 #include "RenderingManager.h"
 #include "../Utilities/Utilities.h"
+#include "Vertex.h"
 
 namespace DaedalusEngine {
     // TODO: Remove these test vertices and indices. This is just test data before model loading is introduced
-    std::vector<float> vertices = {
-        0.5f, 0.5f, 0.0f,
-        -0.5, 0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f
+    std::vector<Vertex> vertices = {
+            {glm::vec3 {0.5f, 0.5f, 0.0f}, glm::vec4{1.0f, 0.0f, 0.0f, 0.0f}},
+            {glm::vec3{-0.5, 0.5f, 0.0f}, glm::vec4{0.0f, 1.0f, 0.0f, 0.0f}},
+            {glm::vec3{-0.5f, -0.5f, 0.0f}, glm::vec4{0.0f, 0.0f, 1.0f, 0.0f}},
+            {glm::vec3{0.5f, -0.5f, 0.0f}, glm::vec4{0.0f, 0.0f, 0.0f, 1.0f}}
     };
 
     std::vector<int> indices = {
@@ -65,7 +66,7 @@ namespace DaedalusEngine {
 
         LayoutElement layoutElements[] = {
                 LayoutElement{0, 0, 3, VT_FLOAT32, False},
-                //LayoutElement {1, 0, 4, VT_FLOAT32, False}
+                LayoutElement {1, 0, 4, VT_FLOAT32, False}
         };
 
         pipelineStateCreateInfo.GraphicsPipeline.InputLayout.LayoutElements = layoutElements;
@@ -106,7 +107,7 @@ namespace DaedalusEngine {
         _renderDevice->CreateShader(shaderCreateInfo, &_fragmentShader);
     }
 
-    IBuffer *RenderingManager::CreateVertexBuffer(std::string name, std::vector<float>& data) {
+    IBuffer *RenderingManager::CreateVertexBuffer(std::string name, std::vector<Vertex>& data) {
         IBuffer* vertexBuffer = nullptr;
 
         size_t sizeOfData = data.size() * sizeof(data[0]);

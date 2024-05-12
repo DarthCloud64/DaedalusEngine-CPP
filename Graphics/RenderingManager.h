@@ -50,6 +50,7 @@
 #include "Graphics/GraphicsEngine/interface/SwapChain.h"
 #include <Platforms/Win32/interface/Win32NativeWindow.h>
 #include "../Window/NativeWindowInformation.h"
+#include "Vertex.h"
 
 using namespace Diligent;
 
@@ -72,7 +73,7 @@ namespace DaedalusEngine {
         void ClearViews(std::tuple<ITextureView*, ITextureView*> renderTargets);
         void CreateVertexShader(std::string fileName, std::string entryPoint);
         void CreateFragmentShader(std::string fileName, std::string entryPoint);
-        IBuffer* CreateVertexBuffer(std::string name, std::vector<float>& data);
+        IBuffer* CreateVertexBuffer(std::string name, std::vector<Vertex>& data);
         IBuffer* CreateIndexBuffer(std::string name, std::vector<int>& data);
     public:
         explicit RenderingManager(NativeWindowInformation* nativeWindowInformation);

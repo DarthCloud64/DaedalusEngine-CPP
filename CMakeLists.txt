@@ -23,6 +23,7 @@ add_executable(DaedalusEngine main.cpp
         Resource/ResourceLoader.h
         Application/ApplicationState.h
         Utilities/Utilities.cpp
-        Utilities/Utilities.h)
+        Utilities/Utilities.h
+        Graphics/Vertex.h)
 
 target_link_libraries(DaedalusEngine assimp-vc143-mtd glfw3)
