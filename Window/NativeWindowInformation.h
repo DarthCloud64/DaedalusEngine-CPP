@@ -5,12 +5,10 @@
 #ifndef DAEDALUSENGINE_NATIVEWINDOWINFORMATION_H
 #define DAEDALUSENGINE_NATIVEWINDOWINFORMATION_H
 
-
-#include <windows.h>
-
 namespace DaedalusEngine {
     struct NativeWindowInformation{
-        HWND win32Window;
+        uint32_t extensionCount;
+        const char** extensions;
     };
 }
 

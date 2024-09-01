@@ -58,12 +58,19 @@ namespace DaedalusEngine {
 
     void Application::InitializeExternalDependencies() {
         printf("Initializing GLFW\n");
-
         if(!glfwInit()){
             printf("Failed to initialize GLFW!");
         }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+        printf("Initializing GLAD\n");
+        if(!gladLoadGL((GLADloadfunc)glfwGetProcAddress))
+        {
+            printf("Failed to initialize GLAD!");
+        }
     }
 
     void Application::KillExternalDependencies() {

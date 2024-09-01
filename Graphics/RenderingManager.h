@@ -9,77 +9,34 @@
 #include <iomanip>
 #include <iostream>
 #include <tuple>
-
-#ifndef NOMINMAX
-#    define NOMINMAX
-#endif
-#include <Windows.h>
-#include <crtdbg.h>
-
-#ifndef PLATFORM_WIN32
-#    define PLATFORM_WIN32 1
-#endif
-
-#ifndef ENGINE_DLL
-#    define ENGINE_DLL 1
-#endif
-
-#ifndef D3D11_SUPPORTED
-#    define D3D11_SUPPORTED 1
-#endif
-
-#ifndef D3D12_SUPPORTED
-#    define D3D12_SUPPORTED 1
-#endif
-
-#ifndef GL_SUPPORTED
-#    define GL_SUPPORTED 1
-#endif
-
-#ifndef VULKAN_SUPPORTED
-#    define VULKAN_SUPPORTED 1
-#endif
-
-#include "Graphics/GraphicsEngineD3D11/interface/EngineFactoryD3D11.h"
-#include "Graphics/GraphicsEngineD3D12/interface/EngineFactoryD3D12.h"
-#include "Graphics/GraphicsEngineOpenGL/interface/EngineFactoryOpenGL.h"
-#include "Graphics/GraphicsEngineVulkan/interface/EngineFactoryVk.h"
-
-#include "Graphics/GraphicsEngine/interface/RenderDevice.h"
-#include "Graphics/GraphicsEngine/interface/DeviceContext.h"
-#include "Graphics/GraphicsEngine/interface/SwapChain.h"
-#include <Platforms/Win32/interface/Win32NativeWindow.h>
+#include <vulkan/vulkan.hpp>
 #include "../Window/NativeWindowInformation.h"
-#include "Vertex.h"
-
-using namespace Diligent;
 
 namespace DaedalusEngine {
 
     class RenderingManager {
     private:
-        IEngineFactoryVk* _engineFactoryVk = nullptr;
-        IRenderDevice* _renderDevice = nullptr;
-        IDeviceContext* _deviceContext = nullptr;
-        ISwapChain* _swapChain = nullptr;
-        IPipelineState* _pipelineState = nullptr;
-        IShaderResourceBinding* _shaderResourceBinding = nullptr;
-        IShader* _vertexShader = nullptr;
-        IShader* _fragmentShader = nullptr;
-        IBuffer* _cubeBuffer = nullptr;
-        IBuffer* _cubeIndexBuffer = nullptr;
+        // IEngineFactoryVk* _engineFactoryVk = nullptr;
+        // IRenderDevice* _renderDevice = nullptr;
+        // IDeviceContext* _deviceContext = nullptr;
+        // ISwapChain* _swapChain = nullptr;
+        // IPipelineState* _pipelineState = nullptr;
+        // IShaderResourceBinding* _shaderResourceBinding = nullptr;
+        // IShader* _vertexShader = nullptr;
+        // IShader* _fragmentShader = nullptr;
+        // IBuffer* _cubeBuffer = nullptr;
+        // IBuffer* _cubeIndexBuffer = nullptr;
+        VkInstance* _vkInstance;
 
-        std::tuple<ITextureView*, ITextureView*> SetRenderTargets();
-        void ClearViews(std::tuple<ITextureView*, ITextureView*> renderTargets);
+        // std::tuple<ITextureView*, ITextureView*> SetRenderTargets();
+        // void ClearViews(std::tuple<ITextureView*, ITextureView*> renderTargets);
         void CreateVertexShader(std::string fileName, std::string entryPoint);
         void CreateFragmentShader(std::string fileName, std::string entryPoint);
-        IBuffer* CreateVertexBuffer(std::string name, std::vector<Vertex>& data);
-        IBuffer* CreateIndexBuffer(std::string name, std::vector<int>& data);
+        // IBuffer* CreateVertexBuffer(std::string name, std::vector<Vertex>& data);
+        // IBuffer* CreateIndexBuffer(std::string name, std::vector<int>& data);
     public:
-        explicit RenderingManager(NativeWindowInformation* nativeWindowInformation);
+        RenderingManager(NativeWindowInformation* nativeWindowInformation);
         ~RenderingManager();
-        void InitializeEngine(NativeWindowInformation* nativeWindowInformation);
-        void InitializeGraphicsPipeline();
         void Render();
         void Present();
     };

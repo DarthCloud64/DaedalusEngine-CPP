@@ -5,6 +5,7 @@
 #include "Utilities.h"
 #include <fstream>
 #include <sstream>
+#include <limits>
 
 namespace DaedalusEngine {
     std::string read_shader_file (const char *shader_file)

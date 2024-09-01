@@ -1,0 +1,2 @@
+g++ -c main.cpp Audio/AudioManager.cpp Graphics/RenderingManager.cpp Input/InputManager.cpp Application/Application.cpp Resource/ResourceLoader.cpp Utilities/Utilities.cpp Window/WindowManager.cpp
+g++ -o DaedalusEngine main.o Application.o AudioManager.o RenderingManager.o InputManager.o ResourceLoader.o Utilities.o WindowManager.o -lglfw -lassimp
