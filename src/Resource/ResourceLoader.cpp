@@ -2,7 +2,7 @@
 // Created by neoro on 11/05/2024.
 //
 
-#include "ResourceLoader.h"
+#include "../../include/Resource/ResourceLoader.h"
 
 namespace DaedalusEngine {
     ResourceLoader::ResourceLoader() {

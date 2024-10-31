@@ -2,7 +2,7 @@
 // Created by neoro on 04/05/2024.
 //
 
-#include "WindowManager.h"
+#include "../../include/Window/WindowManager.h"
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
@@ -23,6 +23,13 @@ namespace DaedalusEngine {
 
         NativeWindowInformation* nativeWindowInformation = new NativeWindowInformation();
         nativeWindowInformation->win32Window = win32Window;
+
+        int width;
+        int height;
+        glfwGetWindowSize(_window, &width, &height);
+
+        nativeWindowInformation->width = width;
+        nativeWindowInformation->height = height;
 
         return nativeWindowInformation;
     }

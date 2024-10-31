@@ -2,7 +2,7 @@
 // Created by neoro on 04/05/2024.
 //
 
-#include "InputManager.h"
+#include "../../include/Input/InputManager.h"
 
 namespace DaedalusEngine {
     std::vector<INPUT> InputManager::_currentInputs;

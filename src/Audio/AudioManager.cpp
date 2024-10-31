@@ -2,7 +2,7 @@
 // Created by neoro on 04/05/2024.
 //
 
-#include "AudioManager.h"
+#include "../../include/Audio/AudioManager.h"
 #include <cstdio>
 
 namespace DaedalusEngine {

@@ -11,6 +11,8 @@
 namespace DaedalusEngine {
     struct NativeWindowInformation{
         HWND win32Window;
+        uint32_t width;
+        uint32_t height;
     };
 }
 
