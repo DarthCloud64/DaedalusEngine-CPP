@@ -21,7 +21,7 @@
     <ClInclude Include="include\Application\ApplicationState.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Audio\AudioManager.h">
+    <ClInclude Include="include\Audio\Audio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Game\AudioComponent.h">
@@ -36,7 +36,7 @@
     <ClInclude Include="include\Game\MusicComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Graphics\RenderingManager.h">
+    <ClInclude Include="include\Graphics\Rendering.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Graphics\Vertex.h">
@@ -45,10 +45,7 @@
     <ClInclude Include="include\Input\Input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Input\InputManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Resource\ResourceLoader.h">
+    <ClInclude Include="include\Resource\Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\Utilities\Utilities.h">
@@ -57,7 +54,7 @@
     <ClInclude Include="include\Window\NativeWindowInformation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Window\WindowManager.h">
+    <ClInclude Include="include\Window\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -65,22 +62,22 @@
     <ClCompile Include="src\Application\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Audio\AudioManager.cpp">
+    <ClCompile Include="src\Audio\Audio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\RenderingManager.cpp">
+    <ClCompile Include="src\Graphics\Rendering.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\InputManager.cpp">
+    <ClCompile Include="src\Input\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Resource\ResourceLoader.cpp">
+    <ClCompile Include="src\Resource\Resource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Utilities\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Window\WindowManager.cpp">
+    <ClCompile Include="src\Window\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\main.cpp">

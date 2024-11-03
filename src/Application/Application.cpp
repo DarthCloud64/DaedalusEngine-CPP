@@ -7,39 +7,35 @@
 #include <vector>
 
 namespace DaedalusEngine {
-    Application::Application() {
+    //temporary containers. move these into scenes
+    Container* _music_Container;
+
+    Application* InitializeApplication() {
+        Application* application = new Application();
+
         printf("Initializing application\n");
         InitializeExternalDependencies();
-        _state = ApplicationState::RUNNING;
+        application->applicationState = ApplicationState::RUNNING;
 
-        printf("Initializing managers\n");
-        _windowManager = new WindowManager("Daedalus Engine", 1200, 720);
-        _inputManager = new InputManager(_windowManager->GetAbstractedWindow());
-        _audioManager = new AudioManager();
-
-        _nativeWindowInformation = _windowManager->GetNativeWindowInformation();
-        _renderingManager = new RenderingManager(_nativeWindowInformation);
-
-        _resourceLoader = new ResourceLoader();
+        application->abstractedWindow = InitializeWindowEngine("Daedalus Engine", 1200, 720);
+        application->audioEngine = InitializeAudioEngine();
 
         // TODO: this (and below) is just for testing. Remove later
         printf("Initializing test component\n");
-        MusicComponent* musicComponent = new MusicComponent();
-        _audioManager->LoadAudioResourceIntoComponent(musicComponent);
+        MusicComponent* musicComponent = CreateMusicComponent(application->audioEngine);
         musicComponent->isPlaying = true;
 
         printf("Initializing test container\n");
         _music_Container = new Container();
         _music_Container->components.push_back(musicComponent);
+
+        return application;
     }
 
-    Application::~Application() {
-        printf("Killing application\n");
-        KillExternalDependencies();
-
+    void KillApplication(Application* application) {
         printf("Killing test components\n");
-        for(Component* entry : _music_Container->components){
-            if(dynamic_cast<MusicComponent*>(entry) != nullptr){
+        for (Component* entry : _music_Container->components) {
+            if (dynamic_cast<MusicComponent*>(entry) != nullptr) {
                 ma_sound_uninit(dynamic_cast<MusicComponent*>(entry)->music);
             }
             delete entry;
@@ -48,15 +44,18 @@ namespace DaedalusEngine {
         printf("Killing test container\n");
         delete _music_Container;
 
-        printf("Killing managers\n");
-        delete _renderingManager;
-        delete _windowManager;
-        delete _inputManager;
-        delete _audioManager;
-        delete _nativeWindowInformation;
+        printf("Killing MINIAUDIO\n");
+        ma_engine_uninit(application->audioEngine);
+
+        printf("Killing GLFW\n");
+        glfwTerminate();
+
+        printf("Killing remainder of application\n");
+        delete application->nativeWindowInformation;
+        delete application;
     }
 
-    void Application::InitializeExternalDependencies() {
+    void InitializeExternalDependencies() {
         printf("Initializing GLFW\n");
 
         if(!glfwInit()){
@@ -66,43 +65,41 @@ namespace DaedalusEngine {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     }
 
-    void Application::KillExternalDependencies() {
-        printf("Killing GLFW\n");
-        glfwTerminate();
-    }
-
-    void Application::Run() {
+    void Run(Application* application) {
         int count = 0;
-        while(_state != ApplicationState::KILLED){
-            Update();
+        while(application->applicationState != ApplicationState::KILLED){
+            Update(application);
             PresentNextFrame();
         }
+
+        KillApplication(application);
     }
 
-    void Application::Update() {
-        ProcessContainers();
+    void Update(Application* application) {
+        ProcessContainers(application);
 
-        std::vector<INPUT> whatWasPressed = _inputManager->ProcessInputsForCurrentFrame();
+        std::vector<INPUT> whatWasPressed = ProcessInputsForCurrentFrame(application->abstractedWindow, application->currentInputs);
         bool wasExitPressed = WasExitApplicationPressed(whatWasPressed);
         if(wasExitPressed){
-            _state = ApplicationState::KILLED;
+            application->applicationState = ApplicationState::KILLED;
         }
 
         for(INPUT entry : whatWasPressed){
             if(entry == INPUT::PAUSE){
-                if(_state == ApplicationState::PAUSED){
-                    _state = ApplicationState::RUNNING;
+                if(application->applicationState == ApplicationState::PAUSED){
+                    application->applicationState = ApplicationState::RUNNING;
                 } else{
-                    _state = ApplicationState::PAUSED;
+                    application->applicationState = ApplicationState::PAUSED;
                 }
             }
         }
-        DaedalusEngine::InputManager::ClearCurrentInputs();
 
-        _renderingManager->Render();
+        application->currentInputs.clear();
+
+        Render();
     }
 
-    bool Application::WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed) {
+    bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed) {
         for(INPUT i : whatWasPressed){
             if(i == INPUT::EXIT_APPLICATION){
                 return true;
@@ -112,18 +109,18 @@ namespace DaedalusEngine {
         return false;
     }
 
-    void Application::PresentNextFrame() {
-        _renderingManager->Present();
+    void PresentNextFrame() {
+        Present();
     }
 
     // TODO: move this logic into a scene class
-    void Application::ProcessContainers() {
+    void ProcessContainers(Application* application) {
         for (Component *component: _music_Container->components) {
             if (dynamic_cast<MusicComponent *>(component) != nullptr) {
-                if(_state != ApplicationState::PAUSED) {
-                    _audioManager->CheckAndPlayMusic(dynamic_cast<MusicComponent *>(component));
+                if(application->applicationState != ApplicationState::PAUSED) {
+                    CheckAndPlayMusic(dynamic_cast<MusicComponent *>(component));
                 } else{
-                    _audioManager->PauseMusic(dynamic_cast<MusicComponent*>(component));
+                    PauseMusic(dynamic_cast<MusicComponent*>(component));
                 }
             }
         }

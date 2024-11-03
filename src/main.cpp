@@ -3,8 +3,10 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 
+using namespace DaedalusEngine;
+
 int main(int argc, char *argv[]){
-    DaedalusEngine::Application app;
-    app.Run();
+    Application* application = InitializeApplication();
+    Run(application);
     return 0;
 }

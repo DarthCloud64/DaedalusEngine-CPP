@@ -5,42 +5,31 @@
 #ifndef DAEDALUSENGINE_APPLICATION_H
 #define DAEDALUSENGINE_APPLICATION_H
 
-#include "../Window/WindowManager.h"
-#include "../Input/InputManager.h"
+#include "../Window/Window.h"
 #include "../Input/Input.h"
 #include "../Game/Container.h"
-#include "../Audio/AudioManager.h"
-#include "../Graphics/RenderingManager.h"
-#include "../Resource/ResourceLoader.h"
+#include "../Audio/Audio.h"
+#include "../Graphics/Rendering.h"
+#include "../Resource/Resource.h"
 #include "ApplicationState.h"
 
 namespace DaedalusEngine {
-
-    class Application {
-    private:
-        ApplicationState _state;
-        NativeWindowInformation* _nativeWindowInformation;
-        WindowManager* _windowManager;
-        InputManager* _inputManager;
-        AudioManager* _audioManager;
-        RenderingManager*_renderingManager;
-        ResourceLoader* _resourceLoader;
-
-        //temporary containers. move these into scenes
-        Container* _music_Container;
-
-        bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed);
-    public:
-        Application();
-        ~Application();
-        void Run();
-        void Update();
-        void PresentNextFrame();
-        void InitializeExternalDependencies();
-        void KillExternalDependencies();
-        void ProcessContainers();
+    struct Application {
+        ApplicationState applicationState;
+        NativeWindowInformation* nativeWindowInformation;
+        GLFWwindow* abstractedWindow;
+        std::vector<INPUT> currentInputs;
+        ma_engine* audioEngine;
     };
 
+    Application* InitializeApplication();
+    void Run(Application* application);
+    void Update(Application* application);
+    void PresentNextFrame();
+    void InitializeExternalDependencies();
+    void KillApplication(Application* application);
+    void ProcessContainers(Application* application);
+    bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_APPLICATION_H

@@ -10,16 +10,7 @@
 #include <iostream>
 
 namespace DaedalusEngine {
-
-    class ResourceLoader {
-    private:
-        Assimp::Importer* _importer;
-    public:
-        ResourceLoader();
-        ~ResourceLoader();
-        void LoadModelIntoComponent(std::string file);
-    };
-
+    void LoadModelIntoComponent(std::string file, Assimp::Importer* importer);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_RESOURCELOADER_H
