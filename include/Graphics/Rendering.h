@@ -13,7 +13,8 @@
 
 
 namespace DaedalusEngine {
-    void InitializeEngine(NativeWindowInformation* nativeWindowInformation);
+    void InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
+    void CreateVulkanInstance();
     void SetRenderTargets();
     void ClearViews();
     void CreateVertexShader(std::string fileName, std::string entryPoint);

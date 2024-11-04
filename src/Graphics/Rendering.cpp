@@ -7,6 +7,9 @@
 #include "../../include/Graphics/Vertex.h"
 #include "../../include/Utilities/Utilities.h"
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
 namespace DaedalusEngine {
     // TODO: Remove these test vertices and indices. This is just test data before model loading is introduced
     std::vector<Vertex> vertices = {
@@ -21,8 +24,23 @@ namespace DaedalusEngine {
             0, 1, 3
     };
 
-    void InitializeEngine(NativeWindowInformation* nativeWindowInformation) {
+    void InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation) {
+        uint32_t extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    }
 
+    void CreateVulkanInstance() {
+        VkApplicationInfo vkApplicationInfo{};
+        vkApplicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+        vkApplicationInfo.pApplicationName = "Daedalus Engine";
+        vkApplicationInfo.applicationVersion = VK_MAKE_VERSION(0, 1, 0);
+        vkApplicationInfo.pEngineName = "Daedalus";
+        vkApplicationInfo.engineVersion = VK_MAKE_VERSION(0, 1, 0);
+        vkApplicationInfo.apiVersion = VK_API_VERSION_1_3;
+
+        VkInstanceCreateInfo vkInstanceCreateInfo{};
+        vkInstanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        vkInstanceCreateInfo.pApplicationInfo = &vkApplicationInfo;
     }
 
     void InitializeGraphicsPipeline() {

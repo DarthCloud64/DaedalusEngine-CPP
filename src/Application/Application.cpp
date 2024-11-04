@@ -19,6 +19,7 @@ namespace DaedalusEngine {
 
         application->abstractedWindow = InitializeWindowEngine("Daedalus Engine", 1200, 720);
         application->audioEngine = InitializeAudioEngine();
+        InitializeRenderingEngine(GetNativeWindowInformation(application->abstractedWindow));
 
         // TODO: this (and below) is just for testing. Remove later
         printf("Initializing test component\n");
@@ -63,9 +64,12 @@ namespace DaedalusEngine {
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     }
 
     void Run(Application* application) {
+        printf("Running application...");
+
         int count = 0;
         while(application->applicationState != ApplicationState::KILLED){
             Update(application);

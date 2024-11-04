@@ -97,8 +97,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>C:\Code\cpp\DaedalusEngine-CPP\external\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Code\cpp\DaedalusEngine-CPP\external\libs;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\VulkanSDK\1.3.296.0\Include;C:\Code\cpp\DaedalusEngine-CPP\external\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\VulkanSDK\1.3.296.0\Lib;C:\Code\cpp\DaedalusEngine-CPP\external\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -139,7 +139,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>glfw3_mt.lib;assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glfw3_mt.lib;assimp-vc143-mtd.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

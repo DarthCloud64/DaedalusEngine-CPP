@@ -14,6 +14,7 @@ namespace DaedalusEngine {
     }
 
     NativeWindowInformation* GetNativeWindowInformation(GLFWwindow* window) {
+        printf("Getting native window information from GLFW window\n");
         HWND win32Window = glfwGetWin32Window(window);
 
         NativeWindowInformation* nativeWindowInformation = new NativeWindowInformation();

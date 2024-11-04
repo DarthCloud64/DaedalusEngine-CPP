@@ -7,7 +7,7 @@
 
 namespace DaedalusEngine {
     ma_engine* InitializeAudioEngine() {
-        printf("Initializing Audio Manager...\n");
+        printf("Initializing Audio...\n");
         ma_engine* audioEngine = new ma_engine();
 
         if (ma_engine_init(nullptr, audioEngine) != MA_SUCCESS) {
@@ -21,7 +21,7 @@ namespace DaedalusEngine {
         printf("Creating music component\n");
 
         MusicComponent* musicComponent = new MusicComponent();
-        ma_result result = ma_sound_init_from_file(audioEngine, "corridors.mp3", 0 , nullptr, nullptr, musicComponent->music);
+        ma_result result = ma_sound_init_from_file(audioEngine, "C:\\Code\\cpp\\DaedalusEngine-CPP\\resources\\corridors.mp3", 0 , nullptr, nullptr, musicComponent->music);
         if(result != MA_SUCCESS){
             printf("Failed to load music resource file\n");
         }
