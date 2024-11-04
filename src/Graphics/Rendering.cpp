@@ -3,12 +3,10 @@
 //
 
 #include <vector>
+#include <string>
 #include "../../include/Graphics/Rendering.h"
 #include "../../include/Graphics/Vertex.h"
 #include "../../include/Utilities/Utilities.h"
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
 
 namespace DaedalusEngine {
     // TODO: Remove these test vertices and indices. This is just test data before model loading is introduced
@@ -24,12 +22,17 @@ namespace DaedalusEngine {
             0, 1, 3
     };
 
-    void InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation) {
-        uint32_t extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation) {
+        printf("Initializing rendering engine...\n");
+        Rendering* rendering = new Rendering();
+
+        rendering->vulkanInstance = CreateVulkanInstance();
+
+        return rendering;
     }
 
-    void CreateVulkanInstance() {
+    VkInstance CreateVulkanInstance() {
+        printf("Creating Vulkan instance...\n");
         VkApplicationInfo vkApplicationInfo{};
         vkApplicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         vkApplicationInfo.pApplicationName = "Daedalus Engine";
@@ -41,6 +44,72 @@ namespace DaedalusEngine {
         VkInstanceCreateInfo vkInstanceCreateInfo{};
         vkInstanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         vkInstanceCreateInfo.pApplicationInfo = &vkApplicationInfo;
+
+        Extension glfwExtensionData = GetGlfwRequiredInstanceExtensions();
+        std::vector<VkExtensionProperties> supportedExtensions = GetSupportedVulkanExtensions();
+        printf("Checking Vulkan instance contains required extensions for GLFW...\n");
+        ExtensionRequirementsMet(glfwExtensionData, supportedExtensions);
+
+        vkInstanceCreateInfo.enabledExtensionCount = glfwExtensionData.extensionCount;
+        vkInstanceCreateInfo.ppEnabledExtensionNames = glfwExtensionData.extensions;
+        vkInstanceCreateInfo.enabledLayerCount = 0;
+
+        VkInstance vkInstance;
+        if (vkCreateInstance(&vkInstanceCreateInfo, nullptr, &vkInstance) != VK_SUCCESS) {
+            printf("Failed to create Vulkan instance!\n");
+        }
+
+        return vkInstance;
+    }
+
+    bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions) {
+        bool oneOrMoreRequiredExtensionsNotFound = false;
+
+        for (int i = 0; i < requiredExtensionData.extensionCount; i++) {
+            bool requiredExtensionIsAvailable = false;
+
+            for (const auto& availableExtension : availableExtensions) {
+                if (strcmp(requiredExtensionData.extensions[i], availableExtension.extensionName) == 0) {
+                    requiredExtensionIsAvailable = true;
+                }
+            }
+
+            if (!requiredExtensionIsAvailable) {
+                oneOrMoreRequiredExtensionsNotFound = true;
+                printf("%s is not available!!\n", requiredExtensionData.extensions[i]);
+            }
+        }
+
+        return oneOrMoreRequiredExtensionsNotFound;
+    }
+
+    std::vector<VkExtensionProperties> GetSupportedVulkanExtensions() {
+        printf("Retrieve supported list of Vulkan extensions...\n");
+
+        uint32_t extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+        std::vector<VkExtensionProperties> supportedExtensions(extensionCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, supportedExtensions.data());
+
+        printf("Supported extensions:\n");
+
+        for (const auto& extension : supportedExtensions) {
+            printf("%s\n", extension.extensionName);
+        }
+
+        return supportedExtensions;
+    }
+
+    Extension GetGlfwRequiredInstanceExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions;
+        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        Extension extensionData = Extension{};
+        extensionData.extensions = glfwExtensions;
+        extensionData.extensionCount = glfwExtensionCount;
+
+        return extensionData;
     }
 
     void InitializeGraphicsPipeline() {
@@ -69,5 +138,9 @@ namespace DaedalusEngine {
 
     void ClearViews() {
         
+    }
+
+    void CleanupRendering(Rendering* rendering) {
+        vkDestroyInstance(rendering->vulkanInstance, nullptr);
     }
 } // DaedalusEngine

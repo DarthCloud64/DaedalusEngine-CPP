@@ -9,6 +9,15 @@
 
 namespace DaedalusEngine {
     GLFWwindow* InitializeWindowEngine(const std::string& windowTitle, int width, int height) {
+        printf("Initializing GLFW\n");
+
+        if (!glfwInit()) {
+            printf("Failed to initialize GLFW!");
+        }
+
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
         printf("Initializing GLFW Window\n");
         return glfwCreateWindow(width, height, windowTitle.c_str(), nullptr, nullptr);
     }
@@ -28,5 +37,10 @@ namespace DaedalusEngine {
         nativeWindowInformation->height = height;
 
         return nativeWindowInformation;
+    }
+
+    void CleanupWindowing(GLFWwindow* glfwWindow) {
+        glfwDestroyWindow(glfwWindow);
+        glfwTerminate();
     }
 } // DaedalusEngine

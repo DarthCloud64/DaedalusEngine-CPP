@@ -11,6 +11,7 @@
 namespace DaedalusEngine {
     GLFWwindow* InitializeWindowEngine(const std::string& windowTitle, int width, int height);
     NativeWindowInformation* GetNativeWindowInformation(GLFWwindow* window);
+    void CleanupWindowing(GLFWwindow* glfwWindow);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_WINDOWMANAGER_H

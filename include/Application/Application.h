@@ -20,13 +20,13 @@ namespace DaedalusEngine {
         GLFWwindow* abstractedWindow;
         std::vector<INPUT> currentInputs;
         ma_engine* audioEngine;
+        Rendering* renderingEngine;
     };
 
     Application* InitializeApplication();
     void Run(Application* application);
     void Update(Application* application);
     void PresentNextFrame();
-    void InitializeExternalDependencies();
     void KillApplication(Application* application);
     void ProcessContainers(Application* application);
     bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed);

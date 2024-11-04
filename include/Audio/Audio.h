@@ -13,6 +13,7 @@ namespace DaedalusEngine {
     MusicComponent* CreateMusicComponent(ma_engine* audioEngine);
     void CheckAndPlayMusic(const MusicComponent* musicComponent);
     void PauseMusic(MusicComponent* musicComponent);
+    void CleanupAudio(ma_engine* audioEngine);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_AUDIOMANAGER_H

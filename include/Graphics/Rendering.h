@@ -9,12 +9,30 @@
 #include <iomanip>
 #include <iostream>
 #include <tuple>
+#include <vector>
 #include "../../include/Window/NativeWindowInformation.h"
+
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 
 namespace DaedalusEngine {
-    void InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
-    void CreateVulkanInstance();
+    struct Extension {
+        const char** extensions;
+        uint32_t extensionCount;
+    };
+
+    struct Rendering {
+        VkInstance vulkanInstance;
+    };
+
+    Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
+    VkInstance CreateVulkanInstance();
+    Extension GetGlfwRequiredInstanceExtensions();
+    std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
+    bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
+    void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();
     void CreateVertexShader(std::string fileName, std::string entryPoint);
@@ -22,6 +40,6 @@ namespace DaedalusEngine {
     void InitializeGraphicsPipeline();
     void Render();
     void Present();
-} // DaedalusEngine
+} // DaedalusEngine/
 
 #endif //DAEDALUSENGINE_RENDERINGMANAGER_H

@@ -38,4 +38,8 @@ namespace DaedalusEngine {
     void PauseMusic(MusicComponent* musicComponent) {
         ma_sound_stop(musicComponent->music);
     }
+
+    void CleanupAudio(ma_engine* audioEngine) {
+        ma_engine_uninit(audioEngine);
+    }
 } // DaedalusEngine

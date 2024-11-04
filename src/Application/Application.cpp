@@ -14,12 +14,11 @@ namespace DaedalusEngine {
         Application* application = new Application();
 
         printf("Initializing application\n");
-        InitializeExternalDependencies();
         application->applicationState = ApplicationState::RUNNING;
 
         application->abstractedWindow = InitializeWindowEngine("Daedalus Engine", 1200, 720);
         application->audioEngine = InitializeAudioEngine();
-        InitializeRenderingEngine(GetNativeWindowInformation(application->abstractedWindow));
+        application->renderingEngine = InitializeRenderingEngine(GetNativeWindowInformation(application->abstractedWindow));
 
         // TODO: this (and below) is just for testing. Remove later
         printf("Initializing test component\n");
@@ -45,26 +44,19 @@ namespace DaedalusEngine {
         printf("Killing test container\n");
         delete _music_Container;
 
-        printf("Killing MINIAUDIO\n");
-        ma_engine_uninit(application->audioEngine);
+        printf("Killing Audio\n");
+        CleanupAudio(application->audioEngine);
 
-        printf("Killing GLFW\n");
-        glfwTerminate();
+        printf("Killing Windowing\n");
+        CleanupWindowing(application->abstractedWindow);
+        
+        printf("Killing Rendering\n");
+        CleanupRendering(application->renderingEngine);
+        delete application->renderingEngine;
 
         printf("Killing remainder of application\n");
         delete application->nativeWindowInformation;
         delete application;
-    }
-
-    void InitializeExternalDependencies() {
-        printf("Initializing GLFW\n");
-
-        if(!glfwInit()){
-            printf("Failed to initialize GLFW!");
-        }
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     }
 
     void Run(Application* application) {
