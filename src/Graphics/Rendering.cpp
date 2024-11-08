@@ -48,13 +48,22 @@ namespace DaedalusEngine {
 
         Extension glfwExtensionData = GetGlfwRequiredInstanceExtensions();
         std::vector<VkExtensionProperties> supportedExtensions = GetSupportedVulkanExtensions();
+
         printf("Checking Vulkan instance contains required extensions for GLFW...\n");
-        ExtensionRequirementsMet(glfwExtensionData, supportedExtensions);
+        bool extensionRequirementsMet = ExtensionRequirementsMet(glfwExtensionData, supportedExtensions);
+        if (!extensionRequirementsMet){
+            throw std::runtime_error("One or more required extensions were not available!\n");
+        }
+
+        printf("Checking Vulkan instance contains required layers...\n");
         const std::vector<const char*> requiredValidationLayers = {
             "VK_LAYER_KHRONOS_validation"
         };
         std::vector<VkLayerProperties> supportedValidationLayers = GetSupportedVulkanLayers();
-        LayerRequirementsMet(requiredValidationLayers, supportedValidationLayers);
+        bool layerRequirementsMet = LayerRequirementsMet(requiredValidationLayers, supportedValidationLayers);
+        if (!layerRequirementsMet){
+            throw std::runtime_error("One or more required layers were not available!\n");
+        }
 
         vkInstanceCreateInfo.enabledExtensionCount = glfwExtensionData.extensionCount;
         vkInstanceCreateInfo.ppEnabledExtensionNames = glfwExtensionData.extensions;
@@ -63,7 +72,7 @@ namespace DaedalusEngine {
 
         VkInstance vkInstance;
         if (vkCreateInstance(&vkInstanceCreateInfo, nullptr, &vkInstance) != VK_SUCCESS) {
-            printf("Failed to create Vulkan instance!\n");
+            throw std::runtime_error("Failed to create Vulkan instance!\n");
         }
 
         return vkInstance;
@@ -87,7 +96,7 @@ namespace DaedalusEngine {
             }
         }
 
-        return oneOrMoreRequiredExtensionsNotFound;
+        return !oneOrMoreRequiredExtensionsNotFound;
     }
 
     bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers) {
@@ -108,7 +117,27 @@ namespace DaedalusEngine {
             }
         }
 
-        return oneOrMoreRequiredLayersNotFound;
+        return !oneOrMoreRequiredLayersNotFound;
+    }
+
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice) {
+        QueueFamilyIndices queueFamilyIndices;
+
+        uint32_t queueFamilyCount = 0;
+        vkGetPhysicalDeviceQueueFamilyProperties(vulkanPhysicalDevice, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(vulkanPhysicalDevice, &queueFamilyCount, queueFamilies.data());
+
+        int counter = 0;
+        for (const auto& queueFamily : queueFamilies) {
+            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+                queueFamilyIndices.graphicsFamily = counter;
+            }
+
+            counter++;
+        }
+
+        return queueFamilyIndices;
     }
 
     std::vector<VkLayerProperties> GetSupportedVulkanLayers() {
@@ -169,7 +198,7 @@ namespace DaedalusEngine {
         }
 
         if (selectedPhysicalDevice == VK_NULL_HANDLE) {
-            printf("Failed to find capable GPU!\n");
+            throw std::runtime_error("Failed to find capable GPU!\n");
         }
 
         return selectedPhysicalDevice;
@@ -180,8 +209,12 @@ namespace DaedalusEngine {
         VkPhysicalDeviceFeatures physicalDeviceFeatures;
         vkGetPhysicalDeviceProperties(vulkanPhysicalDevice, &physicalDeviceProperties);
         vkGetPhysicalDeviceFeatures(vulkanPhysicalDevice, &physicalDeviceFeatures);
+        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice);
 
-        if (physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && physicalDeviceFeatures.geometryShader) {
+        if (
+            physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
+            && physicalDeviceFeatures.geometryShader
+            && queueFamilyIndices.graphicsFamily.has_value()) {
             printf("GPU '%s' meets requirements\n", physicalDeviceProperties.deviceName);
             return true;
         }

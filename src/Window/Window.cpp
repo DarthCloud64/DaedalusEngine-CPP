@@ -12,7 +12,7 @@ namespace DaedalusEngine {
         printf("Initializing GLFW\n");
 
         if (!glfwInit()) {
-            printf("Failed to initialize GLFW!");
+            throw std::runtime_error("Failed to initialize GLFW!\n");
         }
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);

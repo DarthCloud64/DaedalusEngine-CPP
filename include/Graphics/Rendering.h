@@ -15,6 +15,7 @@
 #include <vulkan/vulkan.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+#include <optional>
 
 
 namespace DaedalusEngine {
@@ -29,7 +30,7 @@ namespace DaedalusEngine {
     };
 
     struct QueueFamilyIndices {
-        uint32_t graphicsFamily;
+        std::optional<uint32_t> graphicsFamily;
     };
 
     Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
@@ -41,6 +42,7 @@ namespace DaedalusEngine {
     std::vector<VkLayerProperties> GetSupportedVulkanLayers();
     bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
     bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers);
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice);
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();

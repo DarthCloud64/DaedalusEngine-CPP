@@ -4,6 +4,7 @@
 
 #include "../../include/Audio/Audio.h"
 #include <cstdio>
+#include <stdexcept>
 
 namespace DaedalusEngine {
     ma_engine* InitializeAudioEngine() {
@@ -11,7 +12,7 @@ namespace DaedalusEngine {
         ma_engine* audioEngine = new ma_engine();
 
         if (ma_engine_init(nullptr, audioEngine) != MA_SUCCESS) {
-            printf("Error initializing miniaudio!");
+            throw std::runtime_error("Error initializing miniaudio!");
         }
 
         return audioEngine;
@@ -23,7 +24,7 @@ namespace DaedalusEngine {
         MusicComponent* musicComponent = new MusicComponent();
         ma_result result = ma_sound_init_from_file(audioEngine, "C:\\Code\\cpp\\DaedalusEngine-CPP\\resources\\corridors.mp3", 0 , nullptr, nullptr, musicComponent->music);
         if(result != MA_SUCCESS){
-            printf("Failed to load music resource file\n");
+            throw std::runtime_error("Failed to load music resource file\n");
         }
 
         return musicComponent;
