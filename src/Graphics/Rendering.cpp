@@ -28,6 +28,8 @@ namespace DaedalusEngine {
 
         rendering->vulkanInstance = CreateVulkanInstance();
         rendering->vulkanPhysicalDevice = SelectVulkanPhysicalDevice(rendering->vulkanInstance);
+        rendering->vulkanLogicalDevice = CreateLogicalDevice(rendering->vulkanPhysicalDevice);
+        rendering->vulkanGraphicsQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice).graphicsFamily.value());
 
         return rendering;
     }
@@ -76,6 +78,13 @@ namespace DaedalusEngine {
         }
 
         return vkInstance;
+    }
+
+    VkQueue GetDeviceQueue(VkDevice vulkanLogicalDevice, uint32_t queueFamilyIndex) {
+        VkQueue retrievedQueue;
+        vkGetDeviceQueue(vulkanLogicalDevice, queueFamilyIndex, 0, &retrievedQueue);
+
+        return retrievedQueue;
     }
 
     bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions) {
@@ -204,6 +213,33 @@ namespace DaedalusEngine {
         return selectedPhysicalDevice;
     }
 
+    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice) {
+        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice);
+
+        VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
+        deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        deviceQueueCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
+        deviceQueueCreateInfo.queueCount = 1;
+
+        float priority = 1.0f;
+        deviceQueueCreateInfo.pQueuePriorities = &priority;
+
+        VkPhysicalDeviceFeatures physicalDeviceFeatures{};
+
+        VkDeviceCreateInfo deviceCreateInfo{};
+        deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+        deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
+        deviceCreateInfo.queueCreateInfoCount = 1;
+        deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
+
+        VkDevice vulkanLogicalDevice;
+        if (vkCreateDevice(vulkanPhysicalDevice, &deviceCreateInfo, nullptr, &vulkanLogicalDevice) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create logical device!\n");
+        }
+
+        return vulkanLogicalDevice;
+    }
+
     bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice) {
         VkPhysicalDeviceProperties physicalDeviceProperties;
         VkPhysicalDeviceFeatures physicalDeviceFeatures;
@@ -251,6 +287,7 @@ namespace DaedalusEngine {
     }
 
     void CleanupRendering(Rendering* rendering) {
+        vkDestroyDevice(rendering->vulkanLogicalDevice, nullptr);
         vkDestroyInstance(rendering->vulkanInstance, nullptr);
     }
 } // DaedalusEngine

@@ -27,6 +27,8 @@ namespace DaedalusEngine {
     struct Rendering {
         VkInstance vulkanInstance;
         VkPhysicalDevice vulkanPhysicalDevice;
+        VkDevice vulkanLogicalDevice;
+        VkQueue vulkanGraphicsQueue;
     };
 
     struct QueueFamilyIndices {
@@ -36,6 +38,8 @@ namespace DaedalusEngine {
     Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
     VkInstance CreateVulkanInstance();
     VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance);
+    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice);
+    VkQueue GetDeviceQueue(VkDevice vulkanLogicalDevice, uint32_t queueFamilyIndex);
     bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice);
     Extension GetGlfwRequiredInstanceExtensions();
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
