@@ -27,6 +27,7 @@ namespace DaedalusEngine {
         Rendering* rendering = new Rendering();
 
         rendering->vulkanInstance = CreateVulkanInstance();
+        rendering->vulkanPhysicalDevice = SelectVulkanPhysicalDevice(rendering->vulkanInstance);
 
         return rendering;
     }
@@ -49,10 +50,16 @@ namespace DaedalusEngine {
         std::vector<VkExtensionProperties> supportedExtensions = GetSupportedVulkanExtensions();
         printf("Checking Vulkan instance contains required extensions for GLFW...\n");
         ExtensionRequirementsMet(glfwExtensionData, supportedExtensions);
+        const std::vector<const char*> requiredValidationLayers = {
+            "VK_LAYER_KHRONOS_validation"
+        };
+        std::vector<VkLayerProperties> supportedValidationLayers = GetSupportedVulkanLayers();
+        LayerRequirementsMet(requiredValidationLayers, supportedValidationLayers);
 
         vkInstanceCreateInfo.enabledExtensionCount = glfwExtensionData.extensionCount;
         vkInstanceCreateInfo.ppEnabledExtensionNames = glfwExtensionData.extensions;
-        vkInstanceCreateInfo.enabledLayerCount = 0;
+        vkInstanceCreateInfo.enabledLayerCount = static_cast<uint32_t>(requiredValidationLayers.size());
+        vkInstanceCreateInfo.ppEnabledLayerNames = requiredValidationLayers.data();
 
         VkInstance vkInstance;
         if (vkCreateInstance(&vkInstanceCreateInfo, nullptr, &vkInstance) != VK_SUCCESS) {
@@ -83,6 +90,42 @@ namespace DaedalusEngine {
         return oneOrMoreRequiredExtensionsNotFound;
     }
 
+    bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers) {
+        bool oneOrMoreRequiredLayersNotFound = false;
+
+        for(const auto& requiredValidationLayer : requiredValidationLayers){
+            bool requiredLayerIsAvailable = false;
+
+            for (const auto& availableLayer : availableLayers) {
+                if (strcmp(requiredValidationLayer, availableLayer.layerName) == 0) {
+                    requiredLayerIsAvailable = true;
+                }
+            }
+
+            if (!requiredLayerIsAvailable) {
+                oneOrMoreRequiredLayersNotFound = true;
+                printf("%s is not available!!\n", requiredValidationLayer);
+            }
+        }
+
+        return oneOrMoreRequiredLayersNotFound;
+    }
+
+    std::vector<VkLayerProperties> GetSupportedVulkanLayers() {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+        std::vector<VkLayerProperties> supportedLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount, supportedLayers.data());
+
+        printf("Supported layers:\n");
+
+        for (const auto& layer : supportedLayers) {
+            printf("%s\n", layer.layerName);
+        }
+
+        return supportedLayers;
+    }
+
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions() {
         printf("Retrieve supported list of Vulkan extensions...\n");
 
@@ -110,6 +153,40 @@ namespace DaedalusEngine {
         extensionData.extensionCount = glfwExtensionCount;
 
         return extensionData;
+    }
+
+    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance) {
+        VkPhysicalDevice selectedPhysicalDevice = VK_NULL_HANDLE;
+        uint32_t deviceCount;
+        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
+        std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
+        vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, physicalDevices.data());
+
+        for (const auto& physicalDevice : physicalDevices) {
+            if (IsPhysicalDeviceSuitable(physicalDevice)) {
+                selectedPhysicalDevice = physicalDevice;
+            }
+        }
+
+        if (selectedPhysicalDevice == VK_NULL_HANDLE) {
+            printf("Failed to find capable GPU!\n");
+        }
+
+        return selectedPhysicalDevice;
+    }
+
+    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice) {
+        VkPhysicalDeviceProperties physicalDeviceProperties;
+        VkPhysicalDeviceFeatures physicalDeviceFeatures;
+        vkGetPhysicalDeviceProperties(vulkanPhysicalDevice, &physicalDeviceProperties);
+        vkGetPhysicalDeviceFeatures(vulkanPhysicalDevice, &physicalDeviceFeatures);
+
+        if (physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && physicalDeviceFeatures.geometryShader) {
+            printf("GPU '%s' meets requirements\n", physicalDeviceProperties.deviceName);
+            return true;
+        }
+
+        return false;
     }
 
     void InitializeGraphicsPipeline() {

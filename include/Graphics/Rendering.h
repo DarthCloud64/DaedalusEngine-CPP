@@ -25,13 +25,22 @@ namespace DaedalusEngine {
 
     struct Rendering {
         VkInstance vulkanInstance;
+        VkPhysicalDevice vulkanPhysicalDevice;
+    };
+
+    struct QueueFamilyIndices {
+        uint32_t graphicsFamily;
     };
 
     Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
     VkInstance CreateVulkanInstance();
+    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance);
+    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice);
     Extension GetGlfwRequiredInstanceExtensions();
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
+    std::vector<VkLayerProperties> GetSupportedVulkanLayers();
     bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
+    bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers);
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();
