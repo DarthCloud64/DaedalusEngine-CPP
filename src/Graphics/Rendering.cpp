@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <string>
+#include <set>
 #include "../../include/Graphics/Rendering.h"
 #include "../../include/Graphics/Vertex.h"
 #include "../../include/Utilities/Utilities.h"
@@ -22,14 +23,16 @@ namespace DaedalusEngine {
             0, 1, 3
     };
 
-    Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation) {
+    Rendering* InitializeRenderingEngine(GLFWwindow* glfwWindow) {
         printf("Initializing rendering engine...\n");
         Rendering* rendering = new Rendering();
 
         rendering->vulkanInstance = CreateVulkanInstance();
-        rendering->vulkanPhysicalDevice = SelectVulkanPhysicalDevice(rendering->vulkanInstance);
-        rendering->vulkanLogicalDevice = CreateLogicalDevice(rendering->vulkanPhysicalDevice);
-        rendering->vulkanGraphicsQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice).graphicsFamily.value());
+        rendering->vulkanSurface = CreateSurface(rendering->vulkanInstance, glfwWindow);
+        rendering->vulkanPhysicalDevice = SelectVulkanPhysicalDevice(rendering->vulkanInstance, rendering->vulkanSurface);
+        rendering->vulkanLogicalDevice = CreateLogicalDevice(rendering->vulkanPhysicalDevice, rendering->vulkanSurface);
+        rendering->vulkanGraphicsQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice, rendering->vulkanSurface).graphicsFamily.value());
+        rendering->vulkanPresentQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice, rendering->vulkanSurface).presentFamily.value());
 
         return rendering;
     }
@@ -108,6 +111,27 @@ namespace DaedalusEngine {
         return !oneOrMoreRequiredExtensionsNotFound;
     }
 
+    bool ExtensionRequirementsMet(std::vector<std::string> requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions) {
+        bool oneOrMoreRequiredExtensionsNotFound = false;
+
+        for (const auto& extension : requiredExtensionData) {
+            bool requiredExtensionIsAvailable = false;
+
+            for (const auto& availableExtension : availableExtensions) {
+                if (strcmp(extension.c_str(), availableExtension.extensionName) == 0) {
+                    requiredExtensionIsAvailable = true;
+                }
+            }
+
+            if (!requiredExtensionIsAvailable) {
+                oneOrMoreRequiredExtensionsNotFound = true;
+                printf("%s is not available!!\n", extension);
+            }
+        }
+
+        return !oneOrMoreRequiredExtensionsNotFound;
+    }
+
     bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers) {
         bool oneOrMoreRequiredLayersNotFound = false;
 
@@ -129,7 +153,7 @@ namespace DaedalusEngine {
         return !oneOrMoreRequiredLayersNotFound;
     }
 
-    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice) {
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface) {
         QueueFamilyIndices queueFamilyIndices;
 
         uint32_t queueFamilyCount = 0;
@@ -143,10 +167,27 @@ namespace DaedalusEngine {
                 queueFamilyIndices.graphicsFamily = counter;
             }
 
+            VkBool32 presentSupport = false;
+            vkGetPhysicalDeviceSurfaceSupportKHR(vulkanPhysicalDevice, counter, vulkanSurface, &presentSupport);
+
+            if (presentSupport) {
+                queueFamilyIndices.presentFamily = counter;
+            }
+
             counter++;
         }
 
         return queueFamilyIndices;
+    }
+
+    VkSurfaceKHR CreateSurface(VkInstance vulkanInstance, GLFWwindow* glfwWindow) {
+        VkSurfaceKHR vulkanSurface;
+
+        if (glfwCreateWindowSurface(vulkanInstance, glfwWindow, nullptr, &vulkanSurface) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create vulkan surface!\n");
+        }
+
+        return vulkanSurface;
     }
 
     std::vector<VkLayerProperties> GetSupportedVulkanLayers() {
@@ -181,6 +222,23 @@ namespace DaedalusEngine {
         return supportedExtensions;
     }
 
+    std::vector<VkExtensionProperties> GetSupportedVulkanDeviceExtensions(VkPhysicalDevice vulkanPhysicalDevice) {
+        printf("Retrieve supported list of Vulkan device extensions...\n");
+
+        uint32_t extensionCount = 0;
+        vkEnumerateDeviceExtensionProperties(vulkanPhysicalDevice, nullptr, &extensionCount, nullptr);
+        std::vector<VkExtensionProperties> supportedExtensions(extensionCount);
+        vkEnumerateDeviceExtensionProperties(vulkanPhysicalDevice, nullptr, &extensionCount, supportedExtensions.data());
+
+        printf("Supported extensions:\n");
+
+        for (const auto& extension : supportedExtensions) {
+            printf("%s\n", extension.extensionName);
+        }
+
+        return supportedExtensions;
+    }
+
     Extension GetGlfwRequiredInstanceExtensions() {
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
@@ -193,7 +251,7 @@ namespace DaedalusEngine {
         return extensionData;
     }
 
-    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance) {
+    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance, VkSurfaceKHR vulkanSurface) {
         VkPhysicalDevice selectedPhysicalDevice = VK_NULL_HANDLE;
         uint32_t deviceCount;
         vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, nullptr);
@@ -201,7 +259,7 @@ namespace DaedalusEngine {
         vkEnumeratePhysicalDevices(vulkanInstance, &deviceCount, physicalDevices.data());
 
         for (const auto& physicalDevice : physicalDevices) {
-            if (IsPhysicalDeviceSuitable(physicalDevice)) {
+            if (IsPhysicalDeviceSuitable(physicalDevice, vulkanSurface)) {
                 selectedPhysicalDevice = physicalDevice;
             }
         }
@@ -213,23 +271,28 @@ namespace DaedalusEngine {
         return selectedPhysicalDevice;
     }
 
-    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice) {
-        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice);
-
-        VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
-        deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-        deviceQueueCreateInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-        deviceQueueCreateInfo.queueCount = 1;
+    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface) {
+        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice, vulkanSurface);
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+        std::set<uint32_t> uniqueQueueFamilies = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
 
         float priority = 1.0f;
-        deviceQueueCreateInfo.pQueuePriorities = &priority;
+        for (uint32_t queueFamily : uniqueQueueFamilies) {
+            VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
+            deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+            deviceQueueCreateInfo.queueFamilyIndex = queueFamily;
+            deviceQueueCreateInfo.queueCount = 1;
+            deviceQueueCreateInfo.pQueuePriorities = &priority;
+
+            queueCreateInfos.push_back(deviceQueueCreateInfo);
+        }
 
         VkPhysicalDeviceFeatures physicalDeviceFeatures{};
 
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
-        deviceCreateInfo.queueCreateInfoCount = 1;
+        deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
+        deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
 
         VkDevice vulkanLogicalDevice;
@@ -240,17 +303,23 @@ namespace DaedalusEngine {
         return vulkanLogicalDevice;
     }
 
-    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice) {
+    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface) {
         VkPhysicalDeviceProperties physicalDeviceProperties;
         VkPhysicalDeviceFeatures physicalDeviceFeatures;
         vkGetPhysicalDeviceProperties(vulkanPhysicalDevice, &physicalDeviceProperties);
         vkGetPhysicalDeviceFeatures(vulkanPhysicalDevice, &physicalDeviceFeatures);
-        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice);
+        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice, vulkanSurface);
+        
+        std::vector<std::string> requiredDeviceExtensions;
+        requiredDeviceExtensions.push_back("VK_KHR_swapchain");
+        std::vector<VkExtensionProperties> supportedExtensions = GetSupportedVulkanDeviceExtensions(vulkanPhysicalDevice);
 
         if (
             physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
             && physicalDeviceFeatures.geometryShader
-            && queueFamilyIndices.graphicsFamily.has_value()) {
+            && queueFamilyIndices.graphicsFamily.has_value()
+            && queueFamilyIndices.presentFamily.has_value()
+            && ExtensionRequirementsMet(requiredDeviceExtensions, supportedExtensions)) {
             printf("GPU '%s' meets requirements\n", physicalDeviceProperties.deviceName);
             return true;
         }
@@ -288,6 +357,7 @@ namespace DaedalusEngine {
 
     void CleanupRendering(Rendering* rendering) {
         vkDestroyDevice(rendering->vulkanLogicalDevice, nullptr);
+        vkDestroySurfaceKHR(rendering->vulkanInstance, rendering->vulkanSurface, nullptr);
         vkDestroyInstance(rendering->vulkanInstance, nullptr);
     }
 } // DaedalusEngine

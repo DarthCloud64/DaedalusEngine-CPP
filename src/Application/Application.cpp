@@ -18,7 +18,7 @@ namespace DaedalusEngine {
 
         application->abstractedWindow = InitializeWindowEngine("Daedalus Engine", 1200, 720);
         application->audioEngine = InitializeAudioEngine();
-        application->renderingEngine = InitializeRenderingEngine(GetNativeWindowInformation(application->abstractedWindow));
+        application->renderingEngine = InitializeRenderingEngine(application->abstractedWindow);
 
         // TODO: this (and below) is just for testing. Remove later
         printf("Initializing test component\n");

@@ -29,24 +29,30 @@ namespace DaedalusEngine {
         VkPhysicalDevice vulkanPhysicalDevice;
         VkDevice vulkanLogicalDevice;
         VkQueue vulkanGraphicsQueue;
+        VkQueue vulkanPresentQueue;
+        VkSurfaceKHR vulkanSurface;
     };
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
     };
 
-    Rendering* InitializeRenderingEngine(NativeWindowInformation* nativeWindowInformation);
+    Rendering* InitializeRenderingEngine(GLFWwindow* glfwWindow);
     VkInstance CreateVulkanInstance();
-    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance);
-    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice);
+    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance, VkSurfaceKHR vulkanSurface);
+    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
     VkQueue GetDeviceQueue(VkDevice vulkanLogicalDevice, uint32_t queueFamilyIndex);
-    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice);
+    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
     Extension GetGlfwRequiredInstanceExtensions();
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
+    std::vector<VkExtensionProperties> GetSupportedVulkanDeviceExtensions(VkPhysicalDevice vulkanPhysicalDevice);
     std::vector<VkLayerProperties> GetSupportedVulkanLayers();
     bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
+    bool ExtensionRequirementsMet(std::vector<std::string> requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
     bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers);
-    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice);
+    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
+    VkSurfaceKHR CreateSurface(VkInstance vulkanInstance, GLFWwindow* glfwWindow);
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();
