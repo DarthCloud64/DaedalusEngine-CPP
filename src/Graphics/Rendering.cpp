@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <set>
+#include <algorithm>
 #include "../../include/Graphics/Rendering.h"
 #include "../../include/Graphics/Vertex.h"
 #include "../../include/Utilities/Utilities.h"
@@ -33,6 +34,13 @@ namespace DaedalusEngine {
         rendering->vulkanLogicalDevice = CreateLogicalDevice(rendering->vulkanPhysicalDevice, rendering->vulkanSurface);
         rendering->vulkanGraphicsQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice, rendering->vulkanSurface).graphicsFamily.value());
         rendering->vulkanPresentQueue = GetDeviceQueue(rendering->vulkanLogicalDevice, FindQueueFamilies(rendering->vulkanPhysicalDevice, rendering->vulkanSurface).presentFamily.value());
+        rendering->vulkanSwapChain = CreateSwapChain(rendering->vulkanPhysicalDevice, rendering->vulkanLogicalDevice, rendering->vulkanSurface, glfwWindow);
+        rendering->swapChainImages = GetSwapChainImages(rendering->vulkanLogicalDevice, rendering->vulkanSwapChain);
+
+        SwapChainSupportDetails swapChainSupportDetails = GetSwapChainSupport(rendering->vulkanPhysicalDevice, rendering->vulkanSurface);
+
+        rendering->selectedFormat = SelectSwapSurfaceFormat(swapChainSupportDetails.formats).format;
+        rendering->selectedExtent= SelectSwapExtent(swapChainSupportDetails.capabilities, glfwWindow);
 
         return rendering;
     }
@@ -111,7 +119,7 @@ namespace DaedalusEngine {
         return !oneOrMoreRequiredExtensionsNotFound;
     }
 
-    bool ExtensionRequirementsMet(std::vector<std::string> requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions) {
+    bool ExtensionRequirementsMet(const std::vector<std::string>& requiredExtensionData, const std::vector<VkExtensionProperties>& availableExtensions) {
         bool oneOrMoreRequiredExtensionsNotFound = false;
 
         for (const auto& extension : requiredExtensionData) {
@@ -205,6 +213,28 @@ namespace DaedalusEngine {
         return supportedLayers;
     }
 
+    SwapChainSupportDetails GetSwapChainSupport(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface) {
+        SwapChainSupportDetails swapChainSupportDetails;
+
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vulkanPhysicalDevice, vulkanSurface, &swapChainSupportDetails.capabilities);
+
+        uint32_t formatCount;
+        vkGetPhysicalDeviceSurfaceFormatsKHR(vulkanPhysicalDevice, vulkanSurface, &formatCount, nullptr);
+        if (formatCount != 0) {
+            swapChainSupportDetails.formats.resize(formatCount);
+            vkGetPhysicalDeviceSurfaceFormatsKHR(vulkanPhysicalDevice, vulkanSurface, &formatCount, swapChainSupportDetails.formats.data());
+        }
+
+        uint32_t presentModeCount;
+        vkGetPhysicalDeviceSurfacePresentModesKHR(vulkanPhysicalDevice, vulkanSurface, &presentModeCount, nullptr);
+        if (presentModeCount != 0) {
+            swapChainSupportDetails.presentModes.resize(presentModeCount);
+            vkGetPhysicalDeviceSurfacePresentModesKHR(vulkanPhysicalDevice, vulkanSurface, &presentModeCount, swapChainSupportDetails.presentModes.data());
+        }
+
+        return swapChainSupportDetails;
+    }
+
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions() {
         printf("Retrieve supported list of Vulkan extensions...\n");
 
@@ -289,11 +319,16 @@ namespace DaedalusEngine {
 
         VkPhysicalDeviceFeatures physicalDeviceFeatures{};
 
+        std::vector<const char*> requiredDeviceExtensions;
+        requiredDeviceExtensions.push_back("VK_KHR_swapchain");
+
         VkDeviceCreateInfo deviceCreateInfo{};
         deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         deviceCreateInfo.pQueueCreateInfos = queueCreateInfos.data();
         deviceCreateInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
+        deviceCreateInfo.ppEnabledExtensionNames = requiredDeviceExtensions.data();
+        deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(requiredDeviceExtensions.size());
 
         VkDevice vulkanLogicalDevice;
         if (vkCreateDevice(vulkanPhysicalDevice, &deviceCreateInfo, nullptr, &vulkanLogicalDevice) != VK_SUCCESS) {
@@ -314,17 +349,125 @@ namespace DaedalusEngine {
         requiredDeviceExtensions.push_back("VK_KHR_swapchain");
         std::vector<VkExtensionProperties> supportedExtensions = GetSupportedVulkanDeviceExtensions(vulkanPhysicalDevice);
 
+        SwapChainSupportDetails swapChainSupportDetails;
+        if (ExtensionRequirementsMet(requiredDeviceExtensions, supportedExtensions)) {
+            swapChainSupportDetails = GetSwapChainSupport(vulkanPhysicalDevice, vulkanSurface);
+        }
+
         if (
             physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU 
             && physicalDeviceFeatures.geometryShader
             && queueFamilyIndices.graphicsFamily.has_value()
             && queueFamilyIndices.presentFamily.has_value()
-            && ExtensionRequirementsMet(requiredDeviceExtensions, supportedExtensions)) {
+            && ExtensionRequirementsMet(requiredDeviceExtensions, supportedExtensions)
+            && !swapChainSupportDetails.formats.empty()
+            && !swapChainSupportDetails.presentModes.empty()) {
             printf("GPU '%s' meets requirements\n", physicalDeviceProperties.deviceName);
             return true;
         }
 
         return false;
+    }
+
+    VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
+        for (const auto& availableFormat : availableFormats) {
+            if (
+                availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB
+                && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                return availableFormat;
+            }
+        }
+
+        return availableFormats[0];
+    }
+
+    VkPresentModeKHR SelectSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
+        for (const auto& availablePresentMode : availablePresentModes) {
+            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
+                return availablePresentMode;
+            }
+        }
+
+        return VK_PRESENT_MODE_FIFO_KHR;
+    }
+
+    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* glfwWindow) {
+        if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+            return capabilities.currentExtent;
+        }
+        else {
+            int width;
+            int height;
+            glfwGetFramebufferSize(glfwWindow, &width, &height);
+            VkExtent2D actualExtent = {
+                static_cast<uint32_t>(width),
+                static_cast<uint32_t>(height)
+            };
+
+            actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+            return actualExtent;
+        }
+    }
+
+    VkSwapchainKHR CreateSwapChain(VkPhysicalDevice vulkanPhysicalDevice, VkDevice vulkanLogicalDevice, VkSurfaceKHR vulkanSurface, GLFWwindow* glfwWindow) {
+        SwapChainSupportDetails swapChainSupportDetails = GetSwapChainSupport(vulkanPhysicalDevice, vulkanSurface);
+
+        VkSurfaceFormatKHR surfaceFormat = SelectSwapSurfaceFormat(swapChainSupportDetails.formats);
+        VkPresentModeKHR presentMode = SelectSwapPresentMode(swapChainSupportDetails.presentModes);
+        VkExtent2D extent = SelectSwapExtent(swapChainSupportDetails.capabilities, glfwWindow);
+
+        uint32_t swapChainImageCount = swapChainSupportDetails.capabilities.minImageCount + 1;
+        if (swapChainSupportDetails.capabilities.maxImageCount > 0 && swapChainImageCount > swapChainSupportDetails.capabilities.maxImageCount) {
+            swapChainImageCount = swapChainSupportDetails.capabilities.maxImageCount;
+        }
+
+        QueueFamilyIndices queueFamilyIndices = FindQueueFamilies(vulkanPhysicalDevice, vulkanSurface);
+
+        VkSwapchainCreateInfoKHR swapChainCreateInfo{};
+        swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+        swapChainCreateInfo.surface = vulkanSurface;
+        swapChainCreateInfo.minImageCount = swapChainImageCount;
+        swapChainCreateInfo.imageFormat = surfaceFormat.format;
+        swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
+        swapChainCreateInfo.imageExtent = extent;
+        swapChainCreateInfo.imageArrayLayers = 1;
+        swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+        uint32_t queueFamilyIndicesArr[] = { queueFamilyIndices.graphicsFamily.value(), queueFamilyIndices.presentFamily.value() };
+        if (queueFamilyIndices.graphicsFamily != queueFamilyIndices.presentFamily) {
+            swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+            swapChainCreateInfo.queueFamilyIndexCount = 2;
+            swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndicesArr;
+        }
+        else {
+            swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            swapChainCreateInfo.queueFamilyIndexCount = 0;
+            swapChainCreateInfo.pQueueFamilyIndices = nullptr;
+        }
+
+        swapChainCreateInfo.preTransform = swapChainSupportDetails.capabilities.currentTransform;
+        swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+        swapChainCreateInfo.presentMode = presentMode;
+        swapChainCreateInfo.clipped = VK_TRUE;
+        swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+
+        VkSwapchainKHR swapChain;
+        if (vkCreateSwapchainKHR(vulkanLogicalDevice, &swapChainCreateInfo, nullptr, &swapChain) != VK_SUCCESS) {
+            throw std::runtime_error("Error creating swap chain!\n");
+        }
+
+        return swapChain;
+    }
+
+    std::vector<VkImage> GetSwapChainImages(VkDevice vulkanLogicalDevice, VkSwapchainKHR vulkanSwapChain) {
+        uint32_t imageCount;
+        vkGetSwapchainImagesKHR(vulkanLogicalDevice, vulkanSwapChain, &imageCount, nullptr);
+        std::vector<VkImage> images(imageCount);
+        vkGetSwapchainImagesKHR(vulkanLogicalDevice, vulkanSwapChain, &imageCount, images.data());
+
+        return images;
     }
 
     void InitializeGraphicsPipeline() {
@@ -356,6 +499,7 @@ namespace DaedalusEngine {
     }
 
     void CleanupRendering(Rendering* rendering) {
+        vkDestroySwapchainKHR(rendering->vulkanLogicalDevice, rendering->vulkanSwapChain, nullptr);
         vkDestroyDevice(rendering->vulkanLogicalDevice, nullptr);
         vkDestroySurfaceKHR(rendering->vulkanInstance, rendering->vulkanSurface, nullptr);
         vkDestroyInstance(rendering->vulkanInstance, nullptr);

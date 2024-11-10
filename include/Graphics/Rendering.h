@@ -31,11 +31,21 @@ namespace DaedalusEngine {
         VkQueue vulkanGraphicsQueue;
         VkQueue vulkanPresentQueue;
         VkSurfaceKHR vulkanSurface;
+        VkSwapchainKHR vulkanSwapChain;
+        std::vector<VkImage> swapChainImages;
+        VkFormat selectedFormat;
+        VkExtent2D selectedExtent;
     };
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
+    };
+
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
     };
 
     Rendering* InitializeRenderingEngine(GLFWwindow* glfwWindow);
@@ -48,11 +58,17 @@ namespace DaedalusEngine {
     std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
     std::vector<VkExtensionProperties> GetSupportedVulkanDeviceExtensions(VkPhysicalDevice vulkanPhysicalDevice);
     std::vector<VkLayerProperties> GetSupportedVulkanLayers();
+    SwapChainSupportDetails GetSwapChainSupport(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
     bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
-    bool ExtensionRequirementsMet(std::vector<std::string> requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
+    bool ExtensionRequirementsMet(const std::vector<std::string>& requiredExtensionData, const std::vector<VkExtensionProperties>& availableExtensions);
     bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers);
     QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
     VkSurfaceKHR CreateSurface(VkInstance vulkanInstance, GLFWwindow* glfwWindow);
+    VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR SelectSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* glfwWindow);
+    VkSwapchainKHR CreateSwapChain(VkPhysicalDevice vulkanPhysicalDevice, VkDevice vulkanLogicalDevice, VkSurfaceKHR vulkanSurface, GLFWwindow* glfwWindow);
+    std::vector<VkImage> GetSwapChainImages(VkDevice vulkanLogicalDevice, VkSwapchainKHR vulkanSwapChain);
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();
