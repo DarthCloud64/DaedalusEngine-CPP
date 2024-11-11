@@ -71,6 +71,7 @@ namespace DaedalusEngine {
     VkSwapchainKHR CreateSwapChain(VkPhysicalDevice vulkanPhysicalDevice, VkDevice vulkanLogicalDevice, VkSurfaceKHR vulkanSurface, GLFWwindow* glfwWindow);
     std::vector<VkImage> GetSwapChainImages(VkDevice vulkanLogicalDevice, VkSwapchainKHR vulkanSwapChain);
     std::vector<VkImageView> CreateImageViews(const std::vector<VkImage>& swapChainImages, VkFormat selectedFormat, VkDevice logicalDevice);
+    VkPipeline CreateGraphicsPipeline();
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();

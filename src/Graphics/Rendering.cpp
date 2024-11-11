@@ -499,6 +499,10 @@ namespace DaedalusEngine {
         return swapChainImageViews;
     }
 
+    VkPipeline CreateGraphicsPipeline() {
+
+    }
+
     void InitializeGraphicsPipeline() {
 
     }
