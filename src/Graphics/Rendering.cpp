@@ -40,7 +40,8 @@ namespace DaedalusEngine {
         SwapChainSupportDetails swapChainSupportDetails = GetSwapChainSupport(rendering->vulkanPhysicalDevice, rendering->vulkanSurface);
 
         rendering->selectedFormat = SelectSwapSurfaceFormat(swapChainSupportDetails.formats).format;
-        rendering->selectedExtent= SelectSwapExtent(swapChainSupportDetails.capabilities, glfwWindow);
+        rendering->selectedExtent = SelectSwapExtent(swapChainSupportDetails.capabilities, glfwWindow);
+        rendering->swapChainImageViews = CreateImageViews(rendering->swapChainImages, rendering->selectedFormat, rendering->vulkanLogicalDevice);
 
         return rendering;
     }
@@ -470,6 +471,34 @@ namespace DaedalusEngine {
         return images;
     }
 
+    std::vector<VkImageView> CreateImageViews(const std::vector<VkImage>& swapChainImages, VkFormat selectedFormat, VkDevice logicalDevice) {
+        std::vector<VkImageView> swapChainImageViews(swapChainImages.size());
+
+        for (int i = 0; i < swapChainImages.size(); i++) {
+            VkImageViewCreateInfo imageViewCreateInfo{};
+            imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewCreateInfo.image = swapChainImages[i];
+            imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewCreateInfo.format = selectedFormat;
+            imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_R;
+            imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_G;
+            imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_B;
+            imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_A;
+            imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+            imageViewCreateInfo.subresourceRange.levelCount = 1;
+            imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+            imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+
+            if (vkCreateImageView(logicalDevice, &imageViewCreateInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS) {
+                throw std::runtime_error("Failed to create an image view!\n");
+            }
+        }
+
+        return swapChainImageViews;
+    }
+
     void InitializeGraphicsPipeline() {
 
     }
@@ -499,6 +528,10 @@ namespace DaedalusEngine {
     }
 
     void CleanupRendering(Rendering* rendering) {
+        for (auto imageView : rendering->swapChainImageViews) {
+            vkDestroyImageView(rendering->vulkanLogicalDevice, imageView, nullptr);
+        }
+
         vkDestroySwapchainKHR(rendering->vulkanLogicalDevice, rendering->vulkanSwapChain, nullptr);
         vkDestroyDevice(rendering->vulkanLogicalDevice, nullptr);
         vkDestroySurfaceKHR(rendering->vulkanInstance, rendering->vulkanSurface, nullptr);

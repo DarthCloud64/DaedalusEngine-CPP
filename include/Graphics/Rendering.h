@@ -35,6 +35,7 @@ namespace DaedalusEngine {
         std::vector<VkImage> swapChainImages;
         VkFormat selectedFormat;
         VkExtent2D selectedExtent;
+        std::vector<VkImageView> swapChainImageViews;
     };
 
     struct QueueFamilyIndices {
@@ -69,6 +70,7 @@ namespace DaedalusEngine {
     VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* glfwWindow);
     VkSwapchainKHR CreateSwapChain(VkPhysicalDevice vulkanPhysicalDevice, VkDevice vulkanLogicalDevice, VkSurfaceKHR vulkanSurface, GLFWwindow* glfwWindow);
     std::vector<VkImage> GetSwapChainImages(VkDevice vulkanLogicalDevice, VkSwapchainKHR vulkanSwapChain);
+    std::vector<VkImageView> CreateImageViews(const std::vector<VkImage>& swapChainImages, VkFormat selectedFormat, VkDevice logicalDevice);
     void CleanupRendering(Rendering* rendering);
     void SetRenderTargets();
     void ClearViews();
