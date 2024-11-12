@@ -42,6 +42,7 @@ namespace DaedalusEngine {
         rendering->selectedFormat = SelectSwapSurfaceFormat(swapChainSupportDetails.formats).format;
         rendering->selectedExtent = SelectSwapExtent(swapChainSupportDetails.capabilities, glfwWindow);
         rendering->swapChainImageViews = CreateImageViews(rendering->swapChainImages, rendering->selectedFormat, rendering->vulkanLogicalDevice);
+        rendering->vulkanGraphicsPipeline = CreateGraphicsPipeline();
 
         return rendering;
     }
@@ -499,8 +500,43 @@ namespace DaedalusEngine {
         return swapChainImageViews;
     }
 
-    VkPipeline CreateGraphicsPipeline() {
+    VkPipeline CreateGraphicsPipeline(VkDevice logicalDevice) {
+        std::vector<char> vertexShaderCode = ReadFileAsBinary("C:\\Code\\cpp\\DaedalusEngine-CPP\\shaders\\vert.spv");
+        std::vector<char> fragmentShaderCode = ReadFileAsBinary("C:\\Code\\cpp\\DaedalusEngine-CPP\\shaders\\frag.spv");
+        VkShaderModule vertexShaderModule = CreateShaderModule(vertexShaderCode, logicalDevice);
+        VkShaderModule fragmentShaderModule = CreateShaderModule(fragmentShaderCode, logicalDevice);
 
+        VkPipelineShaderStageCreateInfo vertexStageCreateInfo{};
+        vertexStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertexStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertexStageCreateInfo.module = vertexShaderModule;
+        vertexStageCreateInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragmentStageCreateInfo{};
+        fragmentStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragmentStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragmentStageCreateInfo.module = fragmentShaderModule;
+        fragmentStageCreateInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStagesCreateInfos[] = { vertexStageCreateInfo, fragmentStageCreateInfo };
+
+        vkDestroyShaderModule(logicalDevice, vertexShaderModule, nullptr);
+        vkDestroyShaderModule(logicalDevice, fragmentShaderModule, nullptr);
+        return nullptr;
+    }
+
+    VkShaderModule CreateShaderModule(const std::vector<char>& rawBinaryShaderCode, VkDevice logicalDevice) {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = rawBinaryShaderCode.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(rawBinaryShaderCode.data());
+
+        VkShaderModule shaderModule;
+        if (vkCreateShaderModule(logicalDevice, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create a shader module!\n");
+        }
+
+        return shaderModule;
     }
 
     void InitializeGraphicsPipeline() {

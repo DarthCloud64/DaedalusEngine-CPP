@@ -6,9 +6,11 @@
 #define DAEDALUSENGINE_UTILITIES_H
 
 #include <iostream>
+#include <fstream>
+#include <vector>
 
 namespace DaedalusEngine {
-    std::string read_shader_file(const char *shader_file);
+    std::vector<char> ReadFileAsBinary(const std::string& fileName);
 }
 
 #endif //DAEDALUSENGINE_UTILITIES_H
