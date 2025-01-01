@@ -6,12 +6,12 @@
 #define DAEDALUSENGINE_WINDOWMANAGER_H
 #include <iostream>
 #include "NativeWindowInformation.h"
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 
 namespace DaedalusEngine {
-    GLFWwindow* InitializeWindowEngine(const std::string& windowTitle, int width, int height);
-    NativeWindowInformation* GetNativeWindowInformation(GLFWwindow* window);
-    void CleanupWindowing(GLFWwindow* glfwWindow);
+    SDL_Window* InitializeWindowEngine(const std::string& windowTitle, int width, int height);
+    NativeWindowInformation* GetNativeWindowInformation(SDL_Window* window);
+    void CleanupWindowing(SDL_Window* glfwWindow);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_WINDOWMANAGER_H

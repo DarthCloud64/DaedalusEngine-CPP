@@ -6,11 +6,8 @@
 #define DAEDALUSENGINE_NATIVEWINDOWINFORMATION_H
 
 
-#include <windows.h>
-
 namespace DaedalusEngine {
     struct NativeWindowInformation{
-        HWND win32Window;
         uint32_t width;
         uint32_t height;
     };

@@ -4,30 +4,23 @@
 
 #include "../../include/Window/Window.h"
 
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-
 namespace DaedalusEngine {
-    GLFWwindow* InitializeWindowEngine(const std::string& windowTitle, int width, int height) {
-        printf("Initializing GLFW\n");
+    SDL_Window* InitializeWindowEngine(const std::string& windowTitle, int width, int height) {
+        printf("Initializing SDL\n");
 
-        if (!glfwInit()) {
-            throw std::runtime_error("Failed to initialize GLFW!\n");
+        if (!SDL_Init(SDL_INIT_VIDEO)) {
+            throw std::runtime_error("Failed to initialize SDL!\n");
         }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        printf("Initializing GLFW Window\n");
-        return glfwCreateWindow(width, height, windowTitle.c_str(), nullptr, nullptr);
+        printf("Initializing SDL Window\n");
+        return SDL_CreateWindow(windowTitle.c_str(), 0, 0, width, height, SDL_WINDOW_SHOWN);
     }
 
-    NativeWindowInformation* GetNativeWindowInformation(GLFWwindow* window) {
-        printf("Getting native window information from GLFW window\n");
-        HWND win32Window = glfwGetWin32Window(window);
+    NativeWindowInformation* GetNativeWindowInformation(SDL_Window* window) {
+        printf("Getting native window information from SDL window\n");
+        // HWND win32Window = glfwGetWin32Window(window);
 
         NativeWindowInformation* nativeWindowInformation = new NativeWindowInformation();
-        nativeWindowInformation->win32Window = win32Window;
 
         int width;
         int height;
