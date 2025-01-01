@@ -12,12 +12,12 @@
 #include "../Graphics/Rendering.h"
 #include "../Resource/Resource.h"
 #include "ApplicationState.h"
+#include <SDL2/SDL.h>
 
 namespace DaedalusEngine {
     struct Application {
         ApplicationState applicationState;
-        NativeWindowInformation* nativeWindowInformation;
-        GLFWwindow* abstractedWindow;
+        SDL_Window* abstractedWindow;
         std::vector<INPUT> currentInputs;
         ma_engine* audioEngine;
         Rendering* renderingEngine;

@@ -10,11 +10,8 @@
 #include <iostream>
 #include <tuple>
 #include <vector>
-#include "../../include/Window/NativeWindowInformation.h"
-
 #include <vulkan/vulkan.h>
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 #include <optional>
 
 
@@ -26,52 +23,28 @@ namespace DaedalusEngine {
 
     struct Rendering {
         VkInstance vulkanInstance;
+        VkDebugUtilsMessengerEXT vulkanMessenger;
         VkPhysicalDevice vulkanPhysicalDevice;
         VkDevice vulkanLogicalDevice;
         VkQueue vulkanGraphicsQueue;
+        uint32_t graphicsQueueFamily;
+        VkCommandPool vulkanCommandPool;
+        VkCommandBuffer vulkanCommandBuffer;
+        VkRenderPass vulkanRenderPass;
+        std::vector<VkFramebuffer> frameBuffers;
         VkQueue vulkanPresentQueue;
         VkSurfaceKHR vulkanSurface;
         VkSwapchainKHR vulkanSwapChain;
         std::vector<VkImage> swapChainImages;
-        VkFormat selectedFormat;
-        VkExtent2D selectedExtent;
         std::vector<VkImageView> swapChainImageViews;
         VkPipeline vulkanGraphicsPipeline;
     };
 
-    struct QueueFamilyIndices {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
-    };
-
-    struct SwapChainSupportDetails {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
-    Rendering* InitializeRenderingEngine(GLFWwindow* glfwWindow);
-    VkInstance CreateVulkanInstance();
-    VkPhysicalDevice SelectVulkanPhysicalDevice(VkInstance vulkanInstance, VkSurfaceKHR vulkanSurface);
-    VkDevice CreateLogicalDevice(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
-    VkQueue GetDeviceQueue(VkDevice vulkanLogicalDevice, uint32_t queueFamilyIndex);
-    bool IsPhysicalDeviceSuitable(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
-    Extension GetGlfwRequiredInstanceExtensions();
-    std::vector<VkExtensionProperties> GetSupportedVulkanExtensions();
-    std::vector<VkExtensionProperties> GetSupportedVulkanDeviceExtensions(VkPhysicalDevice vulkanPhysicalDevice);
-    std::vector<VkLayerProperties> GetSupportedVulkanLayers();
-    SwapChainSupportDetails GetSwapChainSupport(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
-    bool ExtensionRequirementsMet(Extension requiredExtensionData, std::vector<VkExtensionProperties> availableExtensions);
-    bool ExtensionRequirementsMet(const std::vector<std::string>& requiredExtensionData, const std::vector<VkExtensionProperties>& availableExtensions);
-    bool LayerRequirementsMet(std::vector<const char*> requiredValidationLayers, std::vector<VkLayerProperties> availableLayers);
-    QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice vulkanPhysicalDevice, VkSurfaceKHR vulkanSurface);
-    VkSurfaceKHR CreateSurface(VkInstance vulkanInstance, GLFWwindow* glfwWindow);
-    VkSurfaceFormatKHR SelectSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-    VkPresentModeKHR SelectSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-    VkExtent2D SelectSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* glfwWindow);
-    VkSwapchainKHR CreateSwapChain(VkPhysicalDevice vulkanPhysicalDevice, VkDevice vulkanLogicalDevice, VkSurfaceKHR vulkanSurface, GLFWwindow* glfwWindow);
-    std::vector<VkImage> GetSwapChainImages(VkDevice vulkanLogicalDevice, VkSwapchainKHR vulkanSwapChain);
-    std::vector<VkImageView> CreateImageViews(const std::vector<VkImage>& swapChainImages, VkFormat selectedFormat, VkDevice logicalDevice);
+    Rendering* InitializeRenderingEngine(SDL_Window* abstractedWindow);
+    Rendering* InitializeCoreVulkanComponents(Rendering* rendering, SDL_Window* abstractedWindow);
+    Rendering* InitializeVulkanCommands(Rendering* rendering);
+    Rendering* InitializeDefaultRenderPass(Rendering* rendering);
+    Rendering* InitializeFramebuffers(Rendering* rendering);
     VkPipeline CreateGraphicsPipeline(VkDevice logicalDevice);
     VkShaderModule CreateShaderModule(const std::vector<char>& rawBinaryShaderCode, VkDevice logicalDevice);
     void CleanupRendering(Rendering* rendering);

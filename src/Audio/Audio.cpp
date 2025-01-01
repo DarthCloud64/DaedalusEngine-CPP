@@ -22,7 +22,7 @@ namespace DaedalusEngine {
         printf("Creating music component\n");
 
         MusicComponent* musicComponent = new MusicComponent();
-        ma_result result = ma_sound_init_from_file(audioEngine, "C:\\Code\\cpp\\DaedalusEngine-CPP\\resources\\corridors.mp3", 0 , nullptr, nullptr, musicComponent->music);
+        ma_result result = ma_sound_init_from_file(audioEngine, "/home/rob/assets/corridors.wav", 0 , nullptr, nullptr, musicComponent->music);
         if(result != MA_SUCCESS){
             throw std::runtime_error("Failed to load music resource file\n");
         }

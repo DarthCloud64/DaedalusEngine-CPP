@@ -55,7 +55,6 @@ namespace DaedalusEngine {
         delete application->renderingEngine;
 
         printf("Killing remainder of application\n");
-        delete application->nativeWindowInformation;
         delete application;
     }
 

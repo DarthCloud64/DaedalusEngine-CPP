@@ -401,3 +401,4 @@ FodyWeavers.xsd
 
 external/
 resources/
+.vscode/

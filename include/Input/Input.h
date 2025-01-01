@@ -6,7 +6,7 @@
 #define DAEDALUSENGINE_INPUT_H
 
 #include <vector>
-#include <GLFW/glfw3.h>
+#include <SDL2/SDL.h>
 
 namespace DaedalusEngine {
     enum INPUT {
@@ -19,8 +19,7 @@ namespace DaedalusEngine {
         EXIT_APPLICATION
     };
 
-    std::vector<INPUT> ProcessInputsForCurrentFrame(GLFWwindow* window, std::vector<INPUT> currentInputs);
-    void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
+    std::vector<INPUT> ProcessInputsForCurrentFrame(SDL_Window* window, std::vector<INPUT> currentInputs);
 }
 
 #endif //DAEDALUSENGINE_INPUT_H

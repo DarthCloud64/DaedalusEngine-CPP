@@ -5,25 +5,17 @@
 #include "../../include/Input/Input.h"
 
 namespace DaedalusEngine {
-    void InitializeInputEngine(GLFWwindow* window) {
-        printf("Initializing input engine");
-        glfwSetKeyCallback(window, KeyCallback);
-    }
-
-    std::vector<INPUT> ProcessInputsForCurrentFrame(GLFWwindow* window, std::vector<INPUT> currentInputs) {
-
-        if(glfwWindowShouldClose(window)){
-            currentInputs.push_back(INPUT::EXIT_APPLICATION);
+    std::vector<INPUT> ProcessInputsForCurrentFrame(SDL_Window* window, std::vector<INPUT> currentInputs) {
+        SDL_Event event;
+        while(SDL_PollEvent(&event)){
+            if(event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_p){
+                currentInputs.push_back(INPUT::PAUSE);
+            }
+            if(event.type == SDL_QUIT){
+                currentInputs.push_back(INPUT::EXIT_APPLICATION);    
+            }
         }
-
-        glfwPollEvents();
 
         return currentInputs;
-    }
-
-    void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods) {
-        if(key == GLFW_KEY_P && action == GLFW_PRESS){
-            
-        }
     }
 } // DaedalusEngine

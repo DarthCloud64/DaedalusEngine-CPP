@@ -1,1 +1,1 @@
-g++ src/Application/Application.cpp src/Audio/Audio.cpp src/Graphics/Rendering.cpp src/Input/Input.cpp src/Resource/Resource.cpp src/Utilities/Utilities.cpp src/Window/Window.cpp src/main.cpp -o daedalus
+g++ external/VkBootstrap.cpp src/Application/Application.cpp src/Audio/Audio.cpp src/Graphics/Rendering.cpp src/Input/Input.cpp src/Resource/Resource.cpp src/Utilities/Utilities.cpp src/Window/Window.cpp src/main.cpp -o daedalus -lSDL2 -lassimp -lvulkan
