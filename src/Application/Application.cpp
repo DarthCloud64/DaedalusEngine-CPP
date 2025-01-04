@@ -91,7 +91,7 @@ namespace DaedalusEngine {
 
         application->currentInputs.clear();
 
-        Render();
+        Draw(application->renderingEngine);
     }
 
     bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed) {
