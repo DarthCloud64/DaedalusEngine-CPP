@@ -6,11 +6,10 @@
 #define DAEDALUSENGINE_MUSICCOMPONENT_H
 
 #include "Component.h"
-#include <miniaudio.h>
 
 namespace DaedalusEngine {
     struct MusicComponent : Component{
-        ma_sound* music = new ma_sound();
+        Music music;
         bool isPlaying = false;
     };
 }

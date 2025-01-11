@@ -12,18 +12,18 @@ namespace DaedalusEngine {
 
     Application* InitializeApplication() {
         Application* application = new Application();
+        SetTargetFPS(60);
 
         printf("Initializing application\n");
         application->applicationState = ApplicationState::RUNNING;
 
-        application->abstractedWindow = InitializeWindowEngine("Daedalus Engine", 1200, 720);
-        application->audioEngine = InitializeAudioEngine();
-        application->renderingEngine = InitializeRenderingEngine(application->abstractedWindow);
+        InitializeWindowEngine("Daedalus Engine", 1200, 720);
+        InitializeAudioEngine();
+        InitializeRenderingEngine();
 
         // TODO: this (and below) is just for testing. Remove later
         printf("Initializing test component\n");
-        MusicComponent* musicComponent = CreateMusicComponent(application->audioEngine);
-        musicComponent->isPlaying = true;
+        MusicComponent* musicComponent = CreateMusicComponent();
 
         printf("Initializing test container\n");
         _music_Container = new Container();
@@ -36,7 +36,7 @@ namespace DaedalusEngine {
         printf("Killing test components\n");
         for (Component* entry : _music_Container->components) {
             if (dynamic_cast<MusicComponent*>(entry) != nullptr) {
-                ma_sound_uninit(dynamic_cast<MusicComponent*>(entry)->music);
+                UnloadMusicStream(dynamic_cast<MusicComponent*>(entry)->music);
             }
             delete entry;
         }
@@ -45,13 +45,13 @@ namespace DaedalusEngine {
         delete _music_Container;
 
         printf("Killing Audio\n");
-        CleanupAudio(application->audioEngine);
+        CleanupAudio();
 
         printf("Killing Windowing\n");
-        CleanupWindowing(application->abstractedWindow);
+        CleanupWindowing();
         
         printf("Killing Rendering\n");
-        CleanupRendering(application->renderingEngine);
+        CleanupRendering();
         delete application->renderingEngine;
 
         printf("Killing remainder of application\n");
@@ -62,7 +62,7 @@ namespace DaedalusEngine {
         printf("Running application...");
 
         int count = 0;
-        while(application->applicationState != ApplicationState::KILLED){
+        while(!WindowShouldClose()){
             Update(application);
             PresentNextFrame();
         }
@@ -73,10 +73,13 @@ namespace DaedalusEngine {
     void Update(Application* application) {
         ProcessContainers(application);
 
-        std::vector<INPUT> whatWasPressed = ProcessInputsForCurrentFrame(application->abstractedWindow, application->currentInputs);
+        std::vector<INPUT> whatWasPressed = ProcessInputsForCurrentFrame(application->currentInputs);
+
         bool wasExitPressed = WasExitApplicationPressed(whatWasPressed);
         if(wasExitPressed){
             application->applicationState = ApplicationState::KILLED;
+            printf("KILLL");
+            return;
         }
 
         for(INPUT entry : whatWasPressed){
@@ -90,8 +93,6 @@ namespace DaedalusEngine {
         }
 
         application->currentInputs.clear();
-
-        Draw(application->renderingEngine);
     }
 
     bool WasExitApplicationPressed(const std::vector<INPUT>& whatWasPressed) {
@@ -105,7 +106,7 @@ namespace DaedalusEngine {
     }
 
     void PresentNextFrame() {
-        Present();
+        Draw();
     }
 
     // TODO: move this logic into a scene class

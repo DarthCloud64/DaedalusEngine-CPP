@@ -10,7 +10,7 @@
 #include <iostream>
 
 namespace DaedalusEngine {
-    void LoadModelIntoComponent(std::string file, Assimp::Importer* importer);
+    void LoadModelIntoComponent(std::string file);
 } // DaedalusEngine
 
 #endif //DAEDALUSENGINE_RESOURCELOADER_H

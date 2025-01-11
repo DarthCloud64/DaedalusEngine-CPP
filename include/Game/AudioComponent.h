@@ -6,7 +6,6 @@
 #define DAEDALUSENGINE_AUDIOCOMPONENT_H
 
 #include "Component.h"
-#include <miniaudio.h>
 
 namespace DaedalusEngine {
     struct AudioComponent : Component{

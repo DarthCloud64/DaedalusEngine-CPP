@@ -7,40 +7,34 @@
 #include <stdexcept>
 
 namespace DaedalusEngine {
-    ma_engine* InitializeAudioEngine() {
-        printf("Initializing Audio...\n");
-        ma_engine* audioEngine = new ma_engine();
-
-        if (ma_engine_init(nullptr, audioEngine) != MA_SUCCESS) {
-            throw std::runtime_error("Error initializing miniaudio!");
-        }
-
-        return audioEngine;
+    void InitializeAudioEngine() {
+        printf("Initializing audio engine\n");
+        InitAudioDevice();
     }
 
-    MusicComponent* CreateMusicComponent(ma_engine* audioEngine) {
-        printf("Creating music component\n");
-
+    MusicComponent* CreateMusicComponent() {
         MusicComponent* musicComponent = new MusicComponent();
-        ma_result result = ma_sound_init_from_file(audioEngine, "/home/rob/assets/corridors.wav", 0 , nullptr, nullptr, musicComponent->music);
-        if(result != MA_SUCCESS){
-            throw std::runtime_error("Failed to load music resource file\n");
-        }
+        musicComponent->music = LoadMusicStream("/home/rob/assets/corridors.ogg");
+        musicComponent->isPlaying = true;
+        PlayMusicStream(musicComponent->music);
 
         return musicComponent;
     }
 
     void CheckAndPlayMusic(const MusicComponent* musicComponent) {
-        if (!ma_sound_is_playing(musicComponent->music)) {
-            ma_sound_start(musicComponent->music);
+        if(musicComponent->isPlaying){
+            UpdateMusicStream(musicComponent->music);
+        }
+        else{
+            PauseMusicStream(musicComponent->music);
         }
     }
 
     void PauseMusic(MusicComponent* musicComponent) {
-        ma_sound_stop(musicComponent->music);
+        musicComponent->isPlaying = false;
     }
 
-    void CleanupAudio(ma_engine* audioEngine) {
-        ma_engine_uninit(audioEngine);
+    void CleanupAudio() {
+        CloseAudioDevice();
     }
 } // DaedalusEngine

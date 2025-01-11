@@ -1,7 +1,5 @@
 #include <iostream>
 #include "../include/Application/Application.h"
-#define MINIAUDIO_IMPLEMENTATION
-#include <miniaudio.h>
 
 using namespace DaedalusEngine;
 

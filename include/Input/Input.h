@@ -6,7 +6,7 @@
 #define DAEDALUSENGINE_INPUT_H
 
 #include <vector>
-#include <SDL2/SDL.h>
+#include <raylib.h>
 
 namespace DaedalusEngine {
     enum INPUT {
@@ -19,7 +19,7 @@ namespace DaedalusEngine {
         EXIT_APPLICATION
     };
 
-    std::vector<INPUT> ProcessInputsForCurrentFrame(SDL_Window* window, std::vector<INPUT> currentInputs);
+    std::vector<INPUT> ProcessInputsForCurrentFrame(std::vector<INPUT> currentInputs);
 }
 
 #endif //DAEDALUSENGINE_INPUT_H
