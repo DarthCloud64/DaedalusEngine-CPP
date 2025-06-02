@@ -24,6 +24,7 @@
 
 #include "../include/ecs/ComponentStorage.h"
 #include "../include/utils/RenderUtils.h"
+#include "../include/systems/CalculateTransformations.h"
 
 static const float vertices[] = {
     // X, Y, Z, R, G, B, A, U, V
@@ -179,63 +180,10 @@ int main()
             velocityX = 1.0f;
         }
 
-        transformComponent.positionY += velocityY * deltaTime;
-        transformComponent.positionX += velocityX * deltaTime;
+        componentStorage.transformComponents[triangle].positionY += velocityY * deltaTime;
+        componentStorage.transformComponents[triangle].positionX += velocityX * deltaTime;
 
-        const bx::Vec3 cameraLookAt = {
-            0.0f,
-            0.0f,
-            0.0f,
-        };
-
-        const bx::Vec3 cameraPosition = {
-            0.0f,
-            0.0f,
-            -10.0f,
-        };
-
-        float viewMatrix[16];
-        bx::mtxLookAt(viewMatrix, cameraPosition, cameraLookAt);
-
-        float projectionMatrix[16];
-        bx::mtxProj(projectionMatrix, 60.0f, 1200.0f / 720.0f, 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-
-        bgfx::setViewTransform(0, viewMatrix, projectionMatrix);
-
-        transformComponent.scale = {
-            1.0f,
-            1.0f,
-            1.0f,
-        };
-
-        transformComponent.rotation = {
-            0.0f,
-            0.0f,
-            0.0f,
-        };
-
-        transformComponent.translation = {
-            transformComponent.positionX,
-            transformComponent.positionY,
-            0.0f,
-        };
-
-        float scaleRotationTranslationMatrix[16];
-        bx::mtxIdentity(scaleRotationTranslationMatrix);
-        bx::mtxSRT(
-            scaleRotationTranslationMatrix,
-            transformComponent.scale.x,
-            transformComponent.scale.y,
-            transformComponent.scale.z,
-            transformComponent.rotation.x,
-            transformComponent.rotation.y,
-            transformComponent.rotation.z,
-            transformComponent.translation.x,
-            transformComponent.translation.y,
-            transformComponent.translation.z);
-
-        bgfx::touch(0);
-        bgfx::setTransform(scaleRotationTranslationMatrix);
+        calculateTransformations(componentStorage);
 
         bgfx::setVertexBuffer(0, renderableComponent.vertexBufferHandle);
         bgfx::setIndexBuffer(renderableComponent.indexBufferHandle);

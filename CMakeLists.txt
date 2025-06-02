@@ -8,5 +8,9 @@ set(BGFX_INSTALL OFF CACHE BOOL "" FORCE)
 add_subdirectory(third_party/bgfx.cmake)
 include_directories(third_party)
 
-add_executable(conspiracy src/main.cpp src/ecs/ComponentStorage.cpp src/utils/RenderUtils.cpp)
+add_executable(conspiracy 
+    src/main.cpp 
+    src/ecs/ComponentStorage.cpp 
+    src/utils/RenderUtils.cpp
+    src/systems/CalculateTransformations.cpp)
 target_link_libraries(conspiracy bgfx bx bimg glfw)
