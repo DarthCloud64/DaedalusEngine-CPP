@@ -82,8 +82,6 @@ static void key_callback(GLFWwindow *window, int key, int scanCode, int action, 
     }
 }
 
-static float positionX = 0.0f;
-static float positionY = 0.0f;
 static double fps = 1.0 / 60.0;
 
 int main()
@@ -130,6 +128,7 @@ int main()
     bgfx::TextureFormat::Enum textureFormat = bgfx::TextureFormat::RGBA8;
 
     Entity triangle = createEntity(componentStorage);
+
     RenderableComponent renderableComponent{};
     renderableComponent.vertexBufferHandle = bgfx::createVertexBuffer(bgfx::makeRef(vertices, sizeof(vertices)), vertexLayout);
     renderableComponent.indexBufferHandle = bgfx::createIndexBuffer(bgfx::makeRef(indices, sizeof(indices)));
@@ -142,6 +141,13 @@ int main()
         textureFormat,
         BGFX_TEXTURE_NONE | BGFX_SAMPLER_POINT,
         bgfx::makeRef(imageData, imageWidth * imageHeight * 4));
+
+    TransformComponent transformComponent{};
+    transformComponent.positionX = 0.0f;
+    transformComponent.positionY = 0.0f;
+
+    componentStorage.transformComponents[triangle] = transformComponent;
+    componentStorage.renderableComponents[triangle] = renderableComponent;
 
     double lastTime = glfwGetTime();
 
@@ -173,8 +179,8 @@ int main()
             velocityX = 1.0f;
         }
 
-        positionY += velocityY * deltaTime;
-        positionX += velocityX * deltaTime;
+        transformComponent.positionY += velocityY * deltaTime;
+        transformComponent.positionX += velocityX * deltaTime;
 
         const bx::Vec3 cameraLookAt = {
             0.0f,
@@ -196,21 +202,21 @@ int main()
 
         bgfx::setViewTransform(0, viewMatrix, projectionMatrix);
 
-        const bx::Vec3 scaleVector{
+        transformComponent.scale = {
             1.0f,
             1.0f,
             1.0f,
         };
 
-        const bx::Vec3 rotationVector{
+        transformComponent.rotation = {
             0.0f,
             0.0f,
             0.0f,
         };
 
-        const bx::Vec3 translationVector{
-            positionX,
-            positionY,
+        transformComponent.translation = {
+            transformComponent.positionX,
+            transformComponent.positionY,
             0.0f,
         };
 
@@ -218,15 +224,15 @@ int main()
         bx::mtxIdentity(scaleRotationTranslationMatrix);
         bx::mtxSRT(
             scaleRotationTranslationMatrix,
-            scaleVector.x,
-            scaleVector.y,
-            scaleVector.z,
-            rotationVector.x,
-            rotationVector.y,
-            rotationVector.z,
-            translationVector.x,
-            translationVector.y,
-            translationVector.z);
+            transformComponent.scale.x,
+            transformComponent.scale.y,
+            transformComponent.scale.z,
+            transformComponent.rotation.x,
+            transformComponent.rotation.y,
+            transformComponent.rotation.z,
+            transformComponent.translation.x,
+            transformComponent.translation.y,
+            transformComponent.translation.z);
 
         bgfx::touch(0);
         bgfx::setTransform(scaleRotationTranslationMatrix);
