@@ -12,5 +12,7 @@ add_executable(conspiracy
     src/main.cpp 
     src/ecs/ComponentStorage.cpp 
     src/utils/RenderUtils.cpp
-    src/systems/CalculateTransformations.cpp)
+    src/systems/CalculateTransformations.cpp
+    src/systems/HandleInput.cpp
+    src/systems/InitializeDependencies.cpp)
 target_link_libraries(conspiracy bgfx bx bimg glfw)

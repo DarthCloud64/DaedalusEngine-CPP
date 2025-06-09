@@ -25,6 +25,8 @@
 #include "../include/ecs/ComponentStorage.h"
 #include "../include/utils/RenderUtils.h"
 #include "../include/systems/CalculateTransformations.h"
+#include "../include/systems/InitializeDependencies.h"
+#include "../include/systems/HandleInput.h"
 
 static const float vertices[] = {
     // X, Y, Z, R, G, B, A, U, V
@@ -39,81 +41,14 @@ static const uint16_t indices[] = {
     1, 3, 2  // second triangle
 };
 
-static bool movingUp = false;
-static bool movingDown = false;
-static bool movingLeft = false;
-static bool movingRight = false;
-
-static void key_callback(GLFWwindow *window, int key, int scanCode, int action, int mods)
-{
-    if ((action == GLFW_PRESS || action == GLFW_REPEAT) && key == GLFW_KEY_DOWN)
-    {
-        movingDown = true;
-    }
-    else
-    {
-        movingDown = false;
-    }
-
-    if ((action == GLFW_PRESS || action == GLFW_REPEAT) && key == GLFW_KEY_UP)
-    {
-        movingUp = true;
-    }
-    else
-    {
-        movingUp = false;
-    }
-
-    if ((action == GLFW_PRESS || action == GLFW_REPEAT) && key == GLFW_KEY_LEFT)
-    {
-        movingLeft = true;
-    }
-    else
-    {
-        movingLeft = false;
-    }
-
-    if ((action == GLFW_PRESS || action == GLFW_REPEAT) && key == GLFW_KEY_RIGHT)
-    {
-        movingRight = true;
-    }
-    else
-    {
-        movingRight = false;
-    }
-}
-
 static double fps = 1.0 / 60.0;
 
 int main()
 {
-    if (!glfwInit())
-    {
-        throw std::runtime_error("GLFW failed to initialize\n");
-    }
-
+    GLFWwindow *window = initGlfw();
     ComponentStorage componentStorage{};
 
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    GLFWwindow *window = glfwCreateWindow(1200, 720, "Test", nullptr, nullptr);
-    glfwSetKeyCallback(window, key_callback);
-
-    bgfx::Init init;
-    init.type = bgfx::RendererType::Vulkan;
-    init.platformData.nwh = (void *)glfwGetX11Window(window);
-    init.platformData.ndt = glfwGetX11Display();
-    init.resolution.width = 1200;
-    init.resolution.height = 720;
-    init.resolution.reset = BGFX_RESET_VSYNC;
-    bgfx::init(init);
-
-    uint8_t red = 154;
-    uint8_t green = 100;
-    uint8_t blue = 73;
-    uint8_t alpha = 255;
-    uint32_t rbgaHex = (red << 24) | (green << 16) | (blue << 8) | alpha;
-    bgfx::setViewRect(0, 0, 0, uint16_t(1200), uint16_t(720));
-    bgfx::setViewClear(0, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, rbgaHex, 1.0f, 0);
+    initBgfx(window);
 
     bgfx::VertexLayout vertexLayout;
     vertexLayout.begin()
@@ -165,6 +100,7 @@ int main()
 
         if (movingDown)
         {
+            std::cout << "down!!!" << std::endl;
             velocityY = -1.0f;
         }
         if (movingUp)
